@@ -1,0 +1,31 @@
+{
+  "name": "cmd-queue",
+  "version": "0.0.1001",
+  "description": "Create a persistent queue stored in a text file",
+  "main": "index.js",
+  "scripts": {
+    "test": "suman"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ORESoftware/cmd-queue.git"
+  },
+  "keywords": [
+    "queue",
+    "database",
+    "persistence",
+    "command",
+    "bash",
+    "sh",
+    "shell"
+  ],
+  "author": "Olegzandr",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ORESoftware/cmd-queue/issues"
+  },
+  "homepage": "https://github.com/ORESoftware/cmd-queue#readme",
+  "dependencies": {
+    "lockfile": "^1.0.3"
+  }
+}
