@@ -26,6 +26,9 @@
   },
   "homepage": "https://github.com/ORESoftware/cmd-queue#readme",
   "dependencies": {
-    "lockfile": "^1.0.3"
+    "lockfile": "^1.0.3",
+    "lodash": "^4.17.2",
+    "rx-lite": "^4.0.8",
+    "uuid": "^3.0.1"
   }
 }
