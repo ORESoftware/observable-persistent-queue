@@ -13,11 +13,24 @@ const q = new Queue({
 });
 
 
-q.read().subscribe(
-    x => console.log('onNext: %s', util.inspect(x)),
-    e => console.log('onError: %s', e.stack),
-    () => console.log('onCompleted')
+// q.readAll().subscribe(
+//     x => console.log('onNext: %s', util.inspect(x)),
+//     e => console.log('onError: %s', e.stack),
+//     () => console.log('onCompleted')
+// );
+
+q.readUnique().subscribe(
+    x => console.log('unique1 onNext: %s', util.inspect(x)),
+    e => console.log('unique1 onError: %s', e.stack),
+    () => console.log('unique1 onCompleted')
 );
+
+
+// q.readUnique().subscribe(
+//     x => console.log('unique2 onNext: %s', util.inspect(x)),
+//     e => console.log('unique2 onError: %s', e.stack),
+//     () => console.log('unique2 onCompleted')
+// );
 
 setInterval(function(){
 
