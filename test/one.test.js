@@ -8,6 +8,8 @@ const util = require('util');
 
 const Queue = require('../lib/queue');
 
+
+
 const q = new Queue({
     filepath: path.resolve(process.env.HOME + '/dogs.js')
 });
@@ -19,24 +21,56 @@ const q = new Queue({
 //     () => console.log('onCompleted')
 // );
 
-q.readUnique().subscribe(
-    x => console.log('unique1 onNext: %s', util.inspect(x)),
-    e => console.log('unique1 onError: %s', e.stack),
-    () => console.log('unique1 onCompleted')
-);
+function read(){
+    process.nextTick(function(){
+
+        q.readUnique().subscribe(
+            x => console.log('1 onNext: %s', util.inspect(x)),
+            e => console.log('1 onError: %s', e.stack),
+            () => console.log('1 onCompleted')
+        );
 
 
-// q.readUnique().subscribe(
-//     x => console.log('unique2 onNext: %s', util.inspect(x)),
-//     e => console.log('unique2 onError: %s', e.stack),
-//     () => console.log('unique2 onCompleted')
-// );
+        q.readUnique().subscribe(
+            x => console.log('2 onNext: %s', util.inspect(x)),
+            e => console.log('2 onError: %s', e.stack),
+            () => console.log('2 onCompleted')
+        );
+
+        q.readUnique().subscribe(
+            x => console.log('3 onNext: %s', util.inspect(x)),
+            e => console.log('3 onError: %s', e.stack),
+            () => console.log('3 onCompleted')
+        );
+
+        q.readUnique().subscribe(
+            x => console.log('4 onNext: %s', util.inspect(x)),
+            e => console.log('4 onError: %s', e.stack),
+            () => console.log('4 onCompleted')
+        );
+
+        q.readUnique().subscribe(
+            x => console.log('5 onNext: %s', util.inspect(x)),
+            e => console.log('5 onError: %s', e.stack),
+            () => console.log('5 onCompleted')
+        );
+    });
+
+}
+
+
+var callable = true;
 
 setInterval(function(){
 
-    q.add('foo bar baz').subscribe()
+    q.add('foo bar baz').subscribe();
 
-}, 1000);
+    if(callable){
+        callable = false;
+        read();
+    }
+
+}, 100);
 
 
 
