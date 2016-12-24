@@ -25,32 +25,32 @@ function read(){
     process.nextTick(function(){
 
         q.readUnique().subscribe(
-            x => console.log('1 onNext: %s', util.inspect(x)),
+            x =>  { x && console.log('1 onNext: %s', util.inspect(x))},
             e => console.log('1 onError: %s', e.stack),
             () => console.log('1 onCompleted')
         );
 
 
         q.readUnique().subscribe(
-            x => console.log('2 onNext: %s', util.inspect(x)),
+            x => x && console.log('2 onNext: %s', util.inspect(x)),
             e => console.log('2 onError: %s', e.stack),
             () => console.log('2 onCompleted')
         );
 
         q.readUnique().subscribe(
-            x => console.log('3 onNext: %s', util.inspect(x)),
+            x => x && console.log('3 onNext: %s', util.inspect(x)),
             e => console.log('3 onError: %s', e.stack),
             () => console.log('3 onCompleted')
         );
 
         q.readUnique().subscribe(
-            x => console.log('4 onNext: %s', util.inspect(x)),
+            x => x && console.log('4 onNext: %s', util.inspect(x)),
             e => console.log('4 onError: %s', e.stack),
             () => console.log('4 onCompleted')
         );
 
         q.readUnique().subscribe(
-            x => console.log('5 onNext: %s', util.inspect(x)),
+            x => x && console.log('5 onNext: %s', util.inspect(x)),
             e => console.log('5 onError: %s', e.stack),
             () => console.log('5 onCompleted')
         );
