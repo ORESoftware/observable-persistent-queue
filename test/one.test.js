@@ -5,73 +5,89 @@
 
 const path = require('path');
 const util = require('util');
+const fs = require('fs');
+
 
 const Queue = require('../lib/queue');
 
-
+process.on('warning', function (w) {
+    console.error(w.stack || w);
+});
 
 const q = new Queue({
-    filepath: path.resolve(process.env.HOME + '/dogs.js')
+    filepath: path.resolve(process.env.HOME + '/dogs.txt')
 });
 
 
+// fs.writeFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), '');
+
+const stderr = process.stderr.write;
+process.stderr.write = function (val) {
+    stderr.apply(process.stderr, arguments);
+    fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), String(val));
+};
+
+
+fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning of log');
+
+
 // q.readAll().subscribe(
-//     x => console.log('onNext: %s', util.inspect(x)),
-//     e => console.log('onError: %s', e.stack),
-//     () => console.log('onCompleted')
+//     x => console.log('\n','onNext: ', util.inspect(x)),
+//     e => console.log('\n','onError: ', e.stack),
+//     () => console.log('\n','onCompleted')
 // );
 
-function read(){
-    process.nextTick(function(){
+function read() {
+    setTimeout(function () {
 
         q.readUnique().subscribe(
-            x =>  { x && console.log('1 onNext: %s', util.inspect(x))},
-            e => console.log('1 onError: %s', e.stack),
-            () => console.log('1 onCompleted')
-        );
-
-
-        q.readUnique().subscribe(
-            x => x && console.log('2 onNext: %s', util.inspect(x)),
-            e => console.log('2 onError: %s', e.stack),
-            () => console.log('2 onCompleted')
+            // x =>  { x && console.log('\n','1 onNext: ', util.inspect(x),'\n')},
+            x => console.log('\n','1 onNext: ', util.inspect(x), '\n'),
+            e => console.log('\n','1 onError: ', e.stack),
+            () => console.log('\n','1 onCompleted')
         );
 
         q.readUnique().subscribe(
-            x => x && console.log('3 onNext: %s', util.inspect(x)),
-            e => console.log('3 onError: %s', e.stack),
-            () => console.log('3 onCompleted')
+            // x => x && console.log('\n','2 onNext: ', util.inspect(x),'\n'),
+            x => console.log('\n','2 onNext: ', util.inspect(x), '\n'),
+            e => console.log('\n','2 onError: ', e.stack),
+            () => console.log('\n','2 onCompleted')
         );
 
         q.readUnique().subscribe(
-            x => x && console.log('4 onNext: %s', util.inspect(x)),
-            e => console.log('4 onError: %s', e.stack),
-            () => console.log('4 onCompleted')
+            // x => x && console.log('\n','3 onNext: ', util.inspect(x),'\n'),
+            x => console.log('\n','3 onNext: ', util.inspect(x), '\n'),
+            e => console.log('\n','3 onError: ', e.stack),
+            () => console.log('\n','3 onCompleted')
         );
 
         q.readUnique().subscribe(
-            x => x && console.log('5 onNext: %s', util.inspect(x)),
-            e => console.log('5 onError: %s', e.stack),
-            () => console.log('5 onCompleted')
+            // x => x && console.log('\n','4 onNext: ', util.inspect(x),'\n'),
+            x => console.log('\n','4 onNext: ', util.inspect(x), '\n'),
+            e => console.log('\n','4 onError: ', e.stack),
+            () => console.log('\n','4 onCompleted')
         );
-    });
+
+        q.readUnique().subscribe(
+            // x => x && console.log('\n','5 onNext: ', util.inspect(x),'\n'),
+            x => console.log('\n','5 onNext: ', util.inspect(x), '\n'),
+            e => console.log('\n','5 onError: ', e.stack),
+            () => console.log('\n','5 onCompleted')
+        );
+
+    }, 3000);
 
 }
 
 
-var callable = true;
+read();
 
-setInterval(function(){
+
+setInterval(function () {
 
     q.add('foo bar baz').subscribe();
 
-    if(callable){
-        callable = false;
-        read();
-    }
-
 }, 100);
-
 
 
 // this.init = function () {
