@@ -75,7 +75,7 @@ function read() {
             () => console.log('\n','5 onCompleted')
         );
 
-    }, 3000);
+    }, 2000);
 
 }
 
@@ -87,7 +87,7 @@ setInterval(function () {
 
     q.add('foo bar baz').subscribe();
 
-}, 100);
+}, 200);
 
 
 // this.init = function () {
