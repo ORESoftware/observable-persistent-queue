@@ -2,7 +2,7 @@
   "name": "cmd-queue",
   "version": "0.0.1001",
   "description": "Create a persistent queue stored in a text file",
-  "main": "index.js",
+  "main": "lib/queue.js",
   "scripts": {
     "test": "suman"
   },
@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/ORESoftware/cmd-queue#readme",
   "dependencies": {
+    "debug": "^2.5.2",
     "live-mutex": "0.0.10001",
     "lockfile": "^1.0.3",
     "lodash": "^4.17.2",
@@ -33,5 +34,8 @@
     "rx-lite": "^4.0.8",
     "tail": "^1.2.1",
     "uuid": "^3.0.1"
+  },
+  "devDependencies": {
+    "suman": "github:oresoftware/suman#dev"
   }
 }

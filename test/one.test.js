@@ -6,7 +6,8 @@
 const path = require('path');
 const util = require('util');
 const fs = require('fs');
-
+const colors = require('colors/safe');
+const Rx = require('rx-lite');
 
 const Queue = require('../lib/queue');
 
@@ -37,74 +38,70 @@ fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning
 //     () => console.log('\n','onCompleted')
 // );
 
-function read() {
-    setTimeout(function () {
 
-        q.readUnique().subscribe(
-            // x =>  { x && console.log('\n','1 onNext: ', util.inspect(x),'\n')},
-            x => console.log('\n','1 onNext: ', util.inspect(x), '\n'),
-            e => console.log('\n','1 onError: ', e.stack),
-            () => console.log('\n','1 onCompleted')
-        );
+setTimeout(function () {
 
-        q.readUnique().subscribe(
-            // x => x && console.log('\n','2 onNext: ', util.inspect(x),'\n'),
-            x => console.log('\n','2 onNext: ', util.inspect(x), '\n'),
-            e => console.log('\n','2 onError: ', e.stack),
-            () => console.log('\n','2 onCompleted')
-        );
+    const subs = new Array(5).fill().map(function (item, index) {
 
-        q.readUnique().subscribe(
-            // x => x && console.log('\n','3 onNext: ', util.inspect(x),'\n'),
-            x => console.log('\n','3 onNext: ', util.inspect(x), '\n'),
-            e => console.log('\n','3 onError: ', e.stack),
-            () => console.log('\n','3 onCompleted')
-        );
+        return function a() {
 
-        q.readUnique().subscribe(
-            // x => x && console.log('\n','4 onNext: ', util.inspect(x),'\n'),
-            x => console.log('\n','4 onNext: ', util.inspect(x), '\n'),
-            e => console.log('\n','4 onError: ', e.stack),
-            () => console.log('\n','4 onCompleted')
-        );
-
-        q.readUnique().subscribe(
-            // x => x && console.log('\n','5 onNext: ', util.inspect(x),'\n'),
-            x => console.log('\n','5 onNext: ', util.inspect(x), '\n'),
-            e => console.log('\n','5 onError: ', e.stack),
-            () => console.log('\n','5 onCompleted')
-        );
-
-    }, 2000);
-
-}
+            const pauser = new Rx.Subject();
+            const obs = q.dequeueStream(pauser);
 
 
-read();
+            obs.subscribe(
+                // x =>  { x && console.log('\n','1 onNext: ', util.inspect(x),'\n')},
+                x => {
+
+                    pauser.onNext(false);
+                    // obs.dispose();
+
+                    console.log('\n', ' => ' + index + ' onNext: ', util.inspect(x), '\n')
+
+                    setTimeout(function () {
+
+                        a();
+
+                        console.log(colors.magenta(' making a pause '));
+                        console.log(colors.magenta(' making a pause '));
+                        console.log(colors.magenta(' making a pause '));
+                        console.log(colors.magenta(' making a pause '));
+                        console.log(colors.magenta(' making a pause '));
+                        console.log(colors.magenta(' making a pause '));
+                        console.log(colors.magenta(' making a pause '));
+                        console.log(colors.magenta(' making a pause '));
+
+                    }, 10000);
+
+
+                },
+                e => console.log('\n', ' => ' + index + ' onError: ', e.stack),
+                () => console.log('\n', ' => ' + index + ' onCompleted')
+            );
+
+            pauser.onNext(true);
+
+
+            // obs.resume();
+        }
+    });
+
+    if (true) {
+
+        subs.forEach(function (fn) {
+
+            fn();
+
+        });
+
+    }
+
+
+}, 1000);
 
 
 setInterval(function () {
 
-    q.add('foo bar baz').subscribe();
+    const c = q.add('foo bar baz', {isPublish: false}).subscribe();
 
-}, 200);
-
-
-// this.init = function () {
-//     if (this.isReady) {
-//         return Rx.Observable.empty();
-//     }
-//     else {
-//         return acquireLock(this)
-//             .flatMap(() => writeFile(this, ''))
-//             .flatMap(() => releaseLock(this))
-//             .catch(e => {
-//                 console.error(e.stack || e);
-//                 return releaseLock(this);
-//             }).finally(() => {
-//                 this.isReady = true;
-//             })
-//
-//     }
-//
-// };
+}, 30);

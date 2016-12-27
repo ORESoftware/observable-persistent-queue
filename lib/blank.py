@@ -19,3 +19,5 @@ with open(logfile,"r+") as f:
                 old_offset-=len(os.linesep)
             f.seek(old_offset)
             f.write(" "*(new_offset-old_offset-len(os.linesep)))
+            print(str(l))
+            break;

@@ -28,35 +28,29 @@ function read() {
 
     setTimeout(function () {
 
-        q.readUnique().subscribe(
-            x => x && console.log('\n','1 onNext: ', util.inspect(x)),
-            e => console.log('\n','1 onError:', e.stack),
-            () => console.log('\n','1 onCompleted')
-        );
+        const subs = new Array(5).fill().map(function (item, index) {
 
-        q.readUnique().subscribe(
-            x => x && console.log('\n','2 onNext: ', util.inspect(x)),
-            e => console.log('\n','2 onError: ', e.stack),
-            () => console.log('\n','2 onCompleted')
-        );
+            return function () {
+                const obs = q.dequeueStream();
+                obs.resume();
+                return obs.subscribe(
+                    // x =>  { x && console.log('\n','1 onNext: ', util.inspect(x),'\n')},
+                    x => console.log('\n', ' => ' + index + ' onNext: ', util.inspect(x), '\n'),
+                    e => console.log('\n', ' => ' + index + ' onError: ', e.stack),
+                    () => console.log('\n', ' => ' + index + ' onCompleted')
+                );
+            }
+        });
 
-        q.readUnique().subscribe(
-            x => x && console.log('\n','3 onNext:', util.inspect(x)),
-            e => console.log('\n','3 onError:', e.stack),
-            () => console.log('\n','3 onCompleted')
-        );
+        if (true) {
 
-        q.readUnique().subscribe(
-            x => x && console.log('\n','4 onNext:', util.inspect(x)),
-            e => console.log('\n','4 onError: ', e.stack),
-            () => console.log('\n','4 onCompleted')
-        );
+            subs.forEach(function (fn) {
 
-        q.readUnique().subscribe(
-            x => x && console.log('\n','5 onNext:', util.inspect(x)),
-            e => console.log('\n','5 onError:', e.stack),
-            () => console.log('\n','5 onCompleted')
-        );
+                fn();
+
+            });
+
+        }
     }, 3000);
 
 }
@@ -67,10 +61,10 @@ read();
 setInterval(function () {
 
     q.dequeue().subscribe(
-        x => console.log('\n',' => dequeue onNext: ', util.inspect(x)),
-        e => console.log('\n',' => dequeue onError: ', e.stack),
-        () => console.log('\n',' => dequeue onCompleted!! ')
+        x => console.log('\n', ' => dequeue onNext: ', util.inspect(x)),
+        e => console.log('\n', ' => dequeue onError: ', e.stack),
+        () => console.log('\n', ' => dequeue onCompleted!! ')
     );
 
-}, 300);
+}, 200);
 
