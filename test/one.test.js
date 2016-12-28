@@ -41,7 +41,7 @@ fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning
 
 setTimeout(function () {
 
-    const subs = new Array(5).fill().map(function (item, index) {
+    const subs = new Array(1).fill().map(function (item, index) {
 
         return function a() {
 
@@ -60,18 +60,9 @@ setTimeout(function () {
 
                     setTimeout(function () {
 
-                        a();
+                        pauser.onNext(true);
 
-                        console.log(colors.magenta(' making a pause '));
-                        console.log(colors.magenta(' making a pause '));
-                        console.log(colors.magenta(' making a pause '));
-                        console.log(colors.magenta(' making a pause '));
-                        console.log(colors.magenta(' making a pause '));
-                        console.log(colors.magenta(' making a pause '));
-                        console.log(colors.magenta(' making a pause '));
-                        console.log(colors.magenta(' making a pause '));
-
-                    }, 10000);
+                    }, 3000);
 
 
                 },
@@ -80,8 +71,6 @@ setTimeout(function () {
             );
 
             pauser.onNext(true);
-
-
             // obs.resume();
         }
     });

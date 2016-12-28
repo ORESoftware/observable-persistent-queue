@@ -32,7 +32,7 @@ function read() {
 
             return function () {
                 const obs = q.dequeueStream();
-                obs.resume();
+
                 return obs.subscribe(
                     // x =>  { x && console.log('\n','1 onNext: ', util.inspect(x),'\n')},
                     x => console.log('\n', ' => ' + index + ' onNext: ', util.inspect(x), '\n'),
