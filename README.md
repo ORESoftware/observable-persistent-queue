@@ -42,7 +42,7 @@ q.deq(); // dequeue 1 (or zero) items from the queue
 ```js
 
 // enqueue multiple items in one call, you can only enqueue stringified data, otherwise an error will be thrown
-q.enq(['a','b','c','d', {
+q.enq(['a','b','c','d'], {
     
 });
 
@@ -90,11 +90,9 @@ q.deq({
 
 
 
-
 ## cleaning up when you're done
 
  ### TBD
 
 
-```
 
