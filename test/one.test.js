@@ -17,6 +17,7 @@ process.on('warning', function (w) {
 });
 
 const q = new Queue({
+    port: 8888,
     filepath: path.resolve(process.env.HOME + '/dogs.txt')
 });
 
