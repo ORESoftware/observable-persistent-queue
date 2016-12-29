@@ -56,3 +56,38 @@ q.dequeueStream().subscribe(
     e => console.log('\n', ' => ' + index + ' onError: ', e.stack),
     () => console.log('\n', ' => ' + index + ' onCompleted')
 );
+
+
+//http://chat.stackoverflow.com/rooms/131652/rx
+//https://jsfiddle.net/p3dxtvsL/
+
+
+function Queue() {
+
+    let index = 0;
+
+    let queue = new Rx.Subject();
+
+    let queueStream = Rx.Observable.create(obs => {
+        var push = Rx.Observer.create(v => {
+            if(index % queue.observers.length == queue.observers.indexOf(push)){
+                obs.onNext(v);
+            }
+        });
+        return queue.subscribe(push);
+    });
+
+    this.push = (v) => { queue.onNext(v); index++; };
+    this.read = () => queueStream;
+}
+
+log = console.log.bind(console);
+queue = new Queue();
+
+queue.read().subscribe(v => log(1, v));
+queue.read().subscribe(v => log(2, v));
+
+queue.push(1);
+queue.push(2);
+queue.push(3);
+queue.push(4);

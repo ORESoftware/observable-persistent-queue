@@ -41,7 +41,7 @@ fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning
 
 setTimeout(function () {
 
-    const subs = new Array(1).fill().map(function (item, index) {
+    const subs = new Array(5).fill().map(function (item, index) {
 
         return function a() {
 
