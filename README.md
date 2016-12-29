@@ -1,12 +1,21 @@
 
 
-# OPQ => Observable Persistent Queue
-
+##     OPQ  (Observable Persistent Queue)
 
 This project was borne of the necessity to create a local message queue usable by NPM libraries, especially
 during NPM postinstall routines. NPM install commands should not happen in parallel, so we need a queue of some variety.
 Not only that, the queue needs to be persistent and shared, such that if npm install commands happen in parallel and are 
 requested via multiple processes, that this information can be shared in one place.
+
+* Observable => Using RxJS, we observe queue for changes and react accordingly; RxJS allows for creating highly composable and flexible APIs.
+* Persistent => The queue is on the filesystem, and can be read + written to via multiple processes
+* Queue => standard FIFO queue, in this case, lines in a text file, separated by newline chars; however, you can 
+create priority requests and pull items off the queue in any order you wish based on custom searches/queries.
+
+# Design
+
+This library uses live-mutex for locking to control read/write access to the queue and prevent corruption.
+This is slower but more robust than file locking (with the NPM lockfile library or similar).
 
 
 # Installation
@@ -32,12 +41,21 @@ const q = new OPQ({
      filePath: path.resolve(process.env.HOME, 'queue.txt')
 });
 
+// enqueue a message to be placed onto the queue
 q.enq('some message to put on the queue');
-q.deq(); // dequeue 1 (or zero) items from the queue
+ // dequeue 1 (or zero) items from the queue
+q.deq();
+
+// but wait, this is node.js, where is the callback? Here we go:
+q.enq('some message').subscribe(function onNext(result){})
+q.deq().subscribe(function onNext(result){}); 
+
+// for the enq() and deq() methods, you do not need to call subscribe to initiate the action
+// but you will need to call subscribe to see/use the results.
 
 ```
 
-# advanced calls
+### advanced calls
 
 ```js
 
@@ -92,7 +110,7 @@ q.deq({
 
 ## cleaning up when you're done
 
- ### TBD
+### TBD
 
 
 
