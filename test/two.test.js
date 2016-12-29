@@ -58,10 +58,11 @@ function read() {
 
 read();
 
-setTimeout(function () {
+setInterval(function () {
 
-    q.dequeue().subscribe(
-        x => console.log('\n', ' => dequeue onNext: ', util.inspect(x)),
+    q.dequeue()
+        .subscribe(
+        x => console.log('\n', ' => dequeue onNext: \n', util.inspect(x)),
         e => console.log('\n', ' => dequeue onError: ', e.stack),
         () => console.log('\n', ' => dequeue onCompleted!! ')
     );

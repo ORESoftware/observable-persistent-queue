@@ -1,14 +1,15 @@
-/**
- * Created by oleg on 12/17/16.
- */
+'use striiict'
 
-
+//core
 const path = require('path');
 const util = require('util');
 const fs = require('fs');
+
+//npm
 const colors = require('colors/safe');
 const Rx = require('rx-lite');
 
+//project
 const Queue = require('../lib/queue');
 
 process.on('warning', function (w) {
@@ -41,7 +42,7 @@ fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning
 
 setTimeout(function () {
 
-    const subs = new Array(2).fill().map(function (item, index) {
+    const subs = new Array(8).fill().map(function (item, index) {
 
         return function a() {
 
@@ -75,7 +76,7 @@ setTimeout(function () {
         }
     });
 
-    if (true) {
+    if (false) {
 
         subs.forEach(function (fn) {
 
@@ -91,6 +92,9 @@ setTimeout(function () {
 
 setInterval(function () {
 
-    const c = q.add('foo bar baz', {isPublish: false}).subscribe();
+    const c = q.add('foo bar baz', {isPublish: false})
+    //     .subscribe(function(data){
+    //      console.log('data => ', data);
+    // });
 
-}, 30);
+}, 80);
