@@ -7,9 +7,9 @@ during NPM postinstall routines. NPM install commands should not happen in paral
 Not only that, the queue needs to be persistent and shared, such that if npm install commands happen in parallel and are 
 requested via multiple processes, that this information can be shared in one place.
 
-* Observable => Using RxJS, we observe queue for changes and react accordingly; RxJS allows for creating highly composable and flexible APIs.
-* Persistent => The queue is on the filesystem, and can be read + written to via multiple processes
-* Queue => standard FIFO queue, in this case, lines in a text file, separated by newline chars; however, you can 
+* <b>Observable</b> => Using RxJS, we observe queue for changes and react accordingly; RxJS allows for creating highly composable and flexible APIs.
+* <b>Persistent</b> => The queue is on the filesystem, and can be read + written to via multiple processes
+* <b>Queue</b> => standard FIFO queue, in this case, lines in a text file, separated by newline chars; however, you can 
 create priority requests and pull items off the queue in any order you wish based on custom searches/queries.
 
 # Design
@@ -20,7 +20,7 @@ This is slower but more robust than file locking (with the NPM lockfile library 
 
 # Installation
 
-``` npm install --save observable-persistent-queue```
+###  <i>``` npm install --save observable-persistent-queue```</i>
 
 # Usage / API
 
