@@ -1,16 +1,19 @@
 {
-  "name": "cmd-queue",
+  "name": "observable-persistent-queue",
   "version": "0.0.1001",
-  "description": "Create a persistent queue stored in a text file",
+  "description": "Create a persistent message queue stored in a text file",
   "main": "lib/queue.js",
   "scripts": {
     "test": "suman"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ORESoftware/cmd-queue.git"
+    "url": "git+https://github.com/ORESoftware/observable-persistent-queue.git"
   },
   "keywords": [
+    "observable",
+    "rxjs",
+    "rxjs5",
     "queue",
     "database",
     "persistence",
@@ -22,9 +25,9 @@
   "author": "Olegzandr",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ORESoftware/cmd-queue/issues"
+    "url": "https://github.com/ORESoftware/observable-persistent-queue/issues"
   },
-  "homepage": "https://github.com/ORESoftware/cmd-queue#readme",
+  "homepage": "https://github.com/ORESoftware/observable-persistent-queue#readme",
   "dependencies": {
     "debug": "^2.5.2",
     "live-mutex": "0.0.10001",

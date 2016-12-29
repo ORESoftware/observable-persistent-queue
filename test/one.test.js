@@ -41,7 +41,7 @@ fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning
 
 setTimeout(function () {
 
-    const subs = new Array(5).fill().map(function (item, index) {
+    const subs = new Array(2).fill().map(function (item, index) {
 
         return function a() {
 
@@ -53,16 +53,16 @@ setTimeout(function () {
                 // x =>  { x && console.log('\n','1 onNext: ', util.inspect(x),'\n')},
                 x => {
 
-                    pauser.onNext(false);
+                    // pauser.onNext(false);
                     // obs.dispose();
 
-                    console.log('\n', ' => ' + index + ' onNext: ', util.inspect(x), '\n')
+                    console.log('\n', ' => ' + index + ' onNext: ', util.inspect(x), '\n');
 
-                    setTimeout(function () {
-
-                        pauser.onNext(true);
-
-                    }, 3000);
+                    // setTimeout(function () {
+                    //
+                    //     pauser.onNext(true);
+                    //
+                    // }, 3000);
 
 
                 },
@@ -93,4 +93,4 @@ setInterval(function () {
 
     const c = q.add('foo bar baz', {isPublish: false}).subscribe();
 
-}, 30);
+}, 50);
