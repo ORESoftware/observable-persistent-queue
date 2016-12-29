@@ -89,8 +89,8 @@ setTimeout(function () {
 }, 1000);
 
 
-// setInterval(function () {
-//
-//     const c = q.add('foo bar baz', {isPublish: false}).subscribe();
-//
-// }, 50);
+setInterval(function () {
+
+    const c = q.add('foo bar baz', {isPublish: false}).subscribe();
+
+}, 30);

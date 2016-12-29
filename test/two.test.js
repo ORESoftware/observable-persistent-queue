@@ -58,7 +58,7 @@ function read() {
 
 read();
 
-setInterval(function () {
+setTimeout(function () {
 
     q.dequeue().subscribe(
         x => console.log('\n', ' => dequeue onNext: ', util.inspect(x)),
