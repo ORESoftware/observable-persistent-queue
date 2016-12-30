@@ -29,12 +29,13 @@
   },
   "homepage": "https://github.com/ORESoftware/observable-persistent-queue#readme",
   "dependencies": {
+    "async": "^2.1.4",
     "debug": "^2.5.2",
     "live-mutex": "0.0.10005",
     "lockfile": "^1.0.3",
     "lodash": "^4.17.2",
     "proper-lockfile": "^2.0.0",
-    "rx-lite": "^4.0.8",
+    "rxjs": "^5.0.2",
     "tail": "^1.2.1",
     "uuid": "^3.0.1"
   },

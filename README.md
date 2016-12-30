@@ -12,10 +12,21 @@ requested via multiple processes, that this information can be shared in one pla
 * <b>Queue</b> => standard FIFO queue, in this case, lines in a text file, separated by newline chars; however, you can 
 create priority requests and pull items off the queue in any order you wish based on custom searches/queries.
 
+# Disclaimer
+
+This library is in beta; not all features mentioned are working as described.
+Because the lock/unlock cycle takes about 3 ms, and other code needs to execute as well, the queue will
+grow unboundedly if items are added to the queue faster than every 25 ms. Unfortunately adding more readers 
+in different processes probably will not help drain the queue, because locking/unlocking is still a bottleneck,
+and the more lock/unlock requestors the slower it is for everyone to read from the queue. This library
+ will delay adding new items to the queue if the number of requests waiting for a lock is greater than a certain 
+ number.
+
 # Design
 
 This library uses live-mutex for locking to control read/write access to the queue and prevent corruption.
-This is slower but more robust than file locking (with the NPM lockfile library or similar).
+This is slower but much more robust than file locking (with the NPM lockfile library or similar). As stated, this 
+library uses RxJS, specifically RxJS5.
 
 
 # Installation
@@ -26,8 +37,8 @@ This is slower but more robust than file locking (with the NPM lockfile library 
 
 ### initializing a queue
 
-note: if the file already exists on the filesystem - no problem, that is expected, and we will use that as the queue.
-if the file does not exist, we will create a new empty file. OPQ will also manage port conflicts, if there is already
+If the file already exists on the filesystem - no problem, that is expected, and we will use that as the queue.
+If the file does *not* exist, we will create the new empty file (or with initial data). OPQ will also manage port conflicts, if there is already
 a live-mutex broker listening on port 8888, then we will use that broker. You will need to pass in a different port
 if you don't want to use the existing broker.
 
@@ -38,6 +49,8 @@ const OPQ = require('observable-persistent-queue');
 
 const q = new OPQ({
      port: 8888,
+     priority: 5,  // 5 different priority levels, 1,2,3,4,5
+     initialData: [],
      filePath: path.resolve(process.env.HOME, 'queue.txt')
 });
 
@@ -47,8 +60,8 @@ q.enq('some message to put on the queue');
 q.deq();
 
 // but wait, this is node.js, where is the callback? Here we go:
-q.enq('some message').subscribe(function onNext(result){})
-q.deq().subscribe(function onNext(result){}); 
+q.enq('some message').subscribe(function next(result){})
+q.deq().subscribe(function next(result){}); 
 
 // for the enq() and deq() methods, you do not need to call subscribe to initiate the action
 // but you will need to call subscribe to see/use the results.
@@ -57,11 +70,36 @@ q.deq().subscribe(function onNext(result){});
 
 ### advanced calls
 
+Note that unless a fairly fatal error happens, errors will be passed to the next callback like so:
+
+```js
+q.deq().subscribe(function next(result){
+    if(result.error){
+        
+    }
+}); 
+
+```
+This is because using error and the error handler will break subscripton flows. We will only
+break that flow when it's appropriate, which it is mostly not.
+
+
 ```js
 
 // enqueue multiple items in one call, you can only enqueue stringified data, otherwise an error will be thrown
 q.enq(['a','b','c','d'], {
-    
+    priority: 3
+});
+
+// batch items so that they are all processed together
+q.enq(['a','b','c','d'], {
+    priority: 3,
+    batch: true
+});
+
+// the above is the same as:
+q.enqBatch(['a','b','c','d'], {
+    priority: 3
 });
 
 // dequeue 5 items from the queue, if only 3 exist, then 3 will be returned, if only 2 exist, then an error will be 
@@ -77,7 +115,7 @@ q.deq({
     min: 3,
     count: 5
 })
-.subscribe(function onNext(data){
+.subscribe(function next(data){
     
 });
 

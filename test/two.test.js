@@ -10,6 +10,7 @@ const fs = require('fs');
 const Queue = require('../lib/queue');
 
 const q = new Queue({
+    port: 8888,
     filepath: path.resolve(process.env.HOME + '/dogs.txt')
 });
 
@@ -34,10 +35,10 @@ function read() {
                 const obs = q.dequeueStream();
 
                 return obs.subscribe(
-                    // x =>  { x && console.log('\n','1 onNext: ', util.inspect(x),'\n')},
-                    x => console.log('\n', ' => ' + index + ' onNext: ', util.inspect(x), '\n'),
-                    e => console.log('\n', ' => ' + index + ' onError: ', e.stack),
-                    () => console.log('\n', ' => ' + index + ' onCompleted')
+                    // x =>  { x && console.log('\n','1 next: ', util.inspect(x),'\n')},
+                    x => console.log('\n', ' => ' + index + ' next: ', util.inspect(x), '\n'),
+                    e => console.log('\n', ' => ' + index + ' error: ', e.stack),
+                    () => console.log('\n', ' => ' + index + ' completed')
                 );
             }
         });
@@ -62,10 +63,10 @@ setInterval(function () {
 
     q.dequeue()
         .subscribe(
-        x => console.log('\n', ' => dequeue onNext: \n', util.inspect(x)),
-        e => console.log('\n', ' => dequeue onError: ', e.stack),
-        () => console.log('\n', ' => dequeue onCompleted!! ')
+        x => console.log('\n', ' => dequeue next: \n', util.inspect(x)),
+        e => console.log('\n', ' => dequeue error: ', e.stack),
+        () => console.log('\n', ' => dequeue completed!! ')
     );
 
-}, 200);
+}, 30);
 

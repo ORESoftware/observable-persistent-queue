@@ -7,7 +7,7 @@ const fs = require('fs');
 
 //npm
 const colors = require('colors/safe');
-const Rx = require('rx-lite');
+const Rx = require('rxjs');
 
 //project
 const Queue = require('../lib/queue');
@@ -35,9 +35,9 @@ fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning
 
 
 // q.readAll().subscribe(
-//     x => console.log('\n','onNext: ', util.inspect(x)),
-//     e => console.log('\n','onError: ', e.stack),
-//     () => console.log('\n','onCompleted')
+//     x => console.log('\n','next: ', util.inspect(x)),
+//     e => console.log('\n','error: ', e.stack),
+//     () => console.log('\n','completed')
 // );
 
 
@@ -52,32 +52,32 @@ setTimeout(function () {
 
 
             obs.subscribe(
-                // x =>  { x && console.log('\n','1 onNext: ', util.inspect(x),'\n')},
+                // x =>  { x && console.log('\n','1 next: ', util.inspect(x),'\n')},
                 x => {
 
-                    // pauser.onNext(false);
+                    // pauser.next(false);
                     // obs.dispose();
 
-                    console.log('\n', ' => ' + index + ' onNext: ', util.inspect(x), '\n');
+                    console.log('\n', ' => ' + index + ' next: ', util.inspect(x), '\n');
 
                     // setTimeout(function () {
                     //
-                    //     pauser.onNext(true);
+                    //     pauser.next(true);
                     //
                     // }, 3000);
 
 
                 },
-                e => console.log('\n', ' => ' + index + ' onError: ', e.stack),
-                () => console.log('\n', ' => ' + index + ' onCompleted')
+                e => console.log('\n', ' => ' + index + ' error: ', e.stack),
+                () => console.log('\n', ' => ' + index + ' completed')
             );
 
-            pauser.onNext(true);
+            pauser.next(true);
             // obs.resume();
         }
     });
 
-    if (false) {
+    if (true) {
 
         subs.forEach(function (fn) {
 
@@ -94,8 +94,10 @@ setTimeout(function () {
 setInterval(function () {
 
     const c = q.add('foo bar baz', {isPublish: false})
-    //     .subscribe(function(data){
-    //      console.log('data => ', data);
-    // });
+        .subscribe(function(data){
+            if(data){
+                console.log(' => add data => ', data);
+            }
+    });
 
-}, 80);
+}, 200);
