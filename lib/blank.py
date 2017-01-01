@@ -1,10 +1,20 @@
 #!/usr/bin/env python
 
-import re,os,sys
+import re,os,sys,json
 logfile = sys.argv[1]
-regex = sys.argv[2]
+regex = json.loads(sys.argv[2]);
 
-pattern = re.compile(regex)
+regexes=[]
+
+for r in regex:
+    regexes.append(re.compile(r))
+
+def matchesAll(line):
+    for r in regexes:
+        if not r.search(line):
+            return False
+    return True
+
 
 with open(logfile,"r+") as f:
     while True:
@@ -12,7 +22,7 @@ with open(logfile,"r+") as f:
         l = f.readline()
         if not l:
             break
-        if pattern.search(l):
+        if matchesAll(l):
             # match: blank the line
             new_offset = f.tell()
             if old_offset > len(os.linesep):

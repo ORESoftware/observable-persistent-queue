@@ -4,6 +4,15 @@
 
 const Rx = require('rxjs');
 
+
+// const regex = /"priority":[0-9],/;
+
+const regex = new RegExp('\"priority\":(1|2),');
+
+const str = '{"dateCreated":"2016-12-31T06:41:32.298Z","pid":15154,"count":1,"uid":"77d55631-36ab-4805-aa17-1c984c8d4d04","priority":1,"isRead":false,"line":"foo bar baz"}';
+
+console.log(regex.test(str));
+
 // const obs = Rx.Observable.interval(300);
 //
 //
@@ -12,24 +21,24 @@ const Rx = require('rxjs');
 //    console.log(' => val => ', val);
 // });
 
-var range = Rx.Observable.range(0, 5);
-
-var source = Rx.Observable.merge(
-    range
-    // range.skip(1),
-    // range.skip(2)
-).takeLast(1)
-
-var subscription = source.subscribe(
-    function (x) {
-        console.log('Next: %s', x);
-    },
-    function (err) {
-        console.log('Error: %s', err);
-    },
-    function () {
-        console.log('Completed');
-    });
+// var range = Rx.Observable.range(0, 5);
+//
+// var source = Rx.Observable.merge(
+//     range
+//     // range.skip(1),
+//     // range.skip(2)
+// ).takeLast(1)
+//
+// var subscription = source.subscribe(
+//     function (x) {
+//         console.log('Next: %s', x);
+//     },
+//     function (err) {
+//         console.log('Error: %s', err);
+//     },
+//     function () {
+//         console.log('Completed');
+//     });
 
 // var source = Rx.Observable.range(0, 5)
 //     .takeLast(1);

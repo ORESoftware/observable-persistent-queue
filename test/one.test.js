@@ -48,7 +48,7 @@ setTimeout(function () {
         return function a() {
 
             const pauser = new Rx.Subject();
-            const obs = q.dequeueStream(pauser);
+            const obs = q.dequeueStream();
 
 
             obs.subscribe(
@@ -77,7 +77,7 @@ setTimeout(function () {
         }
     });
 
-    if (true) {
+    if (false) {
 
         subs.forEach(function (fn) {
 

@@ -1,0 +1,1 @@
+if priority is 1 and there are not any 1's in the first 20, we should cycle back and get the highest priority again

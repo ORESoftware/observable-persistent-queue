@@ -2,7 +2,7 @@
 
 ##     OPQ  (Observable Persistent Queue)
 
-This project was borne of the necessity to create a local message queue usable by NPM libraries, especially
+This project was born of the necessity to create a local message queue usable by NPM libraries, especially
 during NPM postinstall routines. NPM install commands should not happen in parallel, so we need a queue of some variety.
 Not only that, the queue needs to be persistent and shared, such that if npm install commands happen in parallel and are 
 requested via multiple processes, that this information can be shared in one place.
@@ -31,7 +31,7 @@ library uses RxJS, specifically RxJS5.
 
 # Installation
 
-###  <i>``` npm install --save observable-persistent-queue```</i>
+##  ``` npm install --save observable-persistent-queue```
 
 # Usage / API
 
