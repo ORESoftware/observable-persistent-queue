@@ -19,12 +19,14 @@ def matchesAll(line):
 with open(logfile,"r+") as f:
     while True:
         old_offset = f.tell()
+        print("old offset => " + `old_offset`);
         l = f.readline()
         if not l:
             break
         if matchesAll(l):
             # match: blank the line
             new_offset = f.tell()
+            print("new offset => " + `new_offset`);
             if old_offset > len(os.linesep):
                 old_offset-=len(os.linesep)
             f.seek(old_offset)

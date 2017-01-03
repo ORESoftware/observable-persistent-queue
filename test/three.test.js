@@ -10,6 +10,7 @@ const fs = require('fs');
 const Queue = require('../lib/queue');
 
 const q = new Queue({
+    port: 7575,
     filepath: path.resolve(process.env.HOME + '/dogs.txt')
 });
 
@@ -32,7 +33,7 @@ Test.create('test unique', function (assert) {
         subscriptions = new Array(5).fill().map(function (item, index) {
 
             const obs = q.dequeueStream();
-            obs.resume();
+
             return obs.subscribe(
                 // x =>  { x && console.log('\n','1 next: ', util.inspect(x),'\n')},
                 x => console.log('\n', ' => ' + index + ' next: ', util.inspect(x), '\n'),
@@ -61,7 +62,7 @@ Test.create('test unique', function (assert) {
 
             clearInterval(interval);
             subscriptions.forEach(function (s) {
-                s.dispose();
+                s.unsubscribe();
             });
 
             const isUnique = results.every(function (item, index) {

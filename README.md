@@ -15,8 +15,8 @@ create priority requests and pull items off the queue in any order you wish base
 # Disclaimer
 
 This library is in beta; not all features mentioned are working as described.
-Because the lock/unlock cycle takes about 3 ms, and other code needs to execute as well, the queue will
-grow unboundedly if items are added to the queue faster than every 25 ms. Unfortunately adding more readers 
+Because the lock/unlock cycle takes about 3 ms, the queue will
+grow unboundedly if items are added to the queue faster than every 15 ms. Unfortunately adding more readers 
 in different processes probably will not help drain the queue, because locking/unlocking is still a bottleneck,
 and the more lock/unlock requestors the slower it is for everyone to read from the queue. This library
  will delay adding new items to the queue if the number of requests waiting for a lock is greater than a certain 
@@ -25,7 +25,7 @@ and the more lock/unlock requestors the slower it is for everyone to read from t
 # Design
 
 This library uses live-mutex for locking to control read/write access to the queue and prevent corruption.
-This is slower but much more robust than file locking (with the NPM lockfile library or similar). As stated, this 
+This is much more robust than file locking (with the NPM lockfile library or similar). As stated, this 
 library uses RxJS, specifically RxJS5.
 
 

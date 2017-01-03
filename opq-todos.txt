@@ -1,1 +1,16 @@
 if priority is 1 and there are not any 1's in the first 20, we should cycle back and get the highest priority again
+
+need to make sure no unicode chars make it into the file, only utf8?
+
+is there a way to remove characters without truncating a file? as of now we can only overwrite characters with blanks
+
+https://blog.scottfrees.com/building-an-asynchronous-c-addon-for-node-js-using-nan
+
+v8+
+https://github.com/joyent/v8plus
+
+https://github.com/ceejbot/goingnative
+
+https://github.com/nodejs/node/tree/master/src
+
+http://stackoverflow.com/questions/41436698/give-integers-a-default-value-if-they-are-initialized-as-empty

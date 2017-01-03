@@ -40,12 +40,14 @@ setTimeout(function () {
 
     q.drain(obs).subscribe(function (v) {
         console.log('end result => ', v);
+        // obs.next();
     });
 
     obs.subscribe(function (v) {
         console.log('next item that was drained => ', v);
     });
 
+    obs.next('charlie');
 
 }, 1000);
 

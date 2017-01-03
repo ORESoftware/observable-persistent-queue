@@ -27,35 +27,36 @@ process.stderr.write = function (val) {
 };
 
 
-setInterval(function () {
-
+// setInterval(function () {
+//
     q.enq('zoom')
         .subscribe(
             // x => console.log('\n', ' => dequeue next: \n', util.inspect(x)),
             // e => console.log('\n', ' => dequeue error: ', e.stack),
             // () => console.log('\n', ' => dequeue completed!! ')
         );
-
-}, 200);
-
-
-setInterval(function () {
-
-q.deq({min: 5, count: 5, wait: false})
-    .subscribe(
-        x => console.log('\n', colors.bgRed(' 1 => dequeue next: '), '\n', util.inspect(x)),
-        e => console.log('\n', ' => dequeue error: ', e.stack),
-        () => console.log('\n', ' => dequeue completed!! ')
-    );
-
-q.deq({min: 3, count: 4, wait: false})
-    .subscribe(
-        x => console.log('\n', colors.bgRed(' => 2 dequeue next: '), '\n', util.inspect(x)),
-        e => console.log('\n', ' => dequeue error: ', e.stack),
-        () => console.log('\n', ' => dequeue completed!! ')
-    );
-
-
 //
-}, 300);
+// }, 1100);
+
+
+(function doWhile() {
+
+   const c =  q.deq({min: 5, count: 5, wait: true})
+        .subscribe(
+            x => {
+                console.log('\n', colors.bgRed(' 1 => dequeue next: '), '\n', util.inspect(x));
+                c.unsubscribe();
+                doWhile();
+            },
+            e => {
+                console.log('\n', ' => dequeue error: ', e.stack)
+            },
+            () => {
+                console.log('\n', ' => dequeue completed!! ')
+            }
+        );
+
+})();
+
+
 

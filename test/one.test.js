@@ -43,7 +43,7 @@ fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning
 
 setTimeout(function () {
 
-    const subs = new Array(8).fill().map(function (item, index) {
+    const subs = new Array(3).fill().map(function (item, index) {
 
         return function a() {
 
@@ -93,11 +93,29 @@ setTimeout(function () {
 
 setInterval(function () {
 
+    const c = q.dequeue()
+        .subscribe(function(data){
+            if(data.error){
+                console.error(data.error);
+            }
+            else if(data){
+                console.log(' => add data => ', data);
+            }
+        });
+
+}, 150);
+
+
+setInterval(function () {
+
     const c = q.add('foo bar baz', {isPublish: false})
         .subscribe(function(data){
-            if(data){
+            if(data.error){
+                console.error(data.error);
+            }
+            else if(data){
                 console.log(' => add data => ', data);
             }
     });
 
-}, 200);
+}, 150);

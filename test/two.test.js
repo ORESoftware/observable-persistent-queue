@@ -59,14 +59,14 @@ function read() {
 
 read();
 
-// setInterval(function () {
-//
-//     q.dequeue()
-//         .subscribe(
-//         x => console.log('\n', ' => dequeue next: \n', util.inspect(x)),
-//         e => console.log('\n', ' => dequeue error: ', e.stack),
-//         () => console.log('\n', ' => dequeue completed!! ')
-//     );
-//
-// }, 300);
+setInterval(function () {
+
+    q.dequeue()
+        .subscribe(
+        x => console.log('\n', ' => dequeue next: \n', util.inspect(x)),
+        e => console.log('\n', ' => dequeue error: ', e.stack),
+        () => console.log('\n', ' => dequeue completed!! ')
+    );
+
+}, 300);
 

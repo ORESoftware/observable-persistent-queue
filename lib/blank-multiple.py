@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import re,os,sys
+import re,os,sys,json
 logfile = sys.argv[1]
 regex = json.loads(sys.argv[2]);
 max = int(sys.argv[3])
@@ -15,8 +15,6 @@ def matchesAll(line):
         if not r.search(line):
             return False
     return True
-
-
 
 count = 0
 
