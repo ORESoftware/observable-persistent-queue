@@ -16,9 +16,6 @@ const q = new Queue({
 });
 
 
-process.on('warning', function (w) {
-    console.error(w.stack || w);
-});
 
 const stderr = process.stderr.write;
 process.stderr.write = function (val) {

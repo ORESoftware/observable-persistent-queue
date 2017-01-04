@@ -15,10 +15,6 @@ const q = new Queue({
 });
 
 
-process.on('warning', function (w) {
-    console.error(w.stack || w);
-});
-
 const suman = require('suman');
 const Test = suman.init(module);
 
@@ -32,7 +28,7 @@ Test.create('test unique', function (assert) {
 
         subscriptions = new Array(5).fill().map(function (item, index) {
 
-            const obs = q.dequeueStream();
+            const obs = q.eqStream();
 
             return obs.subscribe(
                 // x =>  { x && console.log('\n','1 next: ', util.inspect(x),'\n')},

@@ -12,9 +12,6 @@ const Rx = require('rxjs');
 //project
 const Queue = require('../lib/queue');
 
-process.on('warning', function (w) {
-    console.error(w.stack || w);
-});
 
 const q = new Queue({
     port: 8888,
@@ -38,30 +35,37 @@ setTimeout(function () {
 
     const obs = new Rx.Subject();
 
-    q.drain(obs).subscribe(function (v) {
-        console.log('end result => ', v);
-        // obs.next();
-    });
+    q.drain(obs).subscribe(
+        function (v) {
+            console.log('end result => ', v);
+            obs.next();
+        },
+        function (e) {
+            console.log('on error => ', e);
+        },
+        function (c) {
+            console.log(colors.red('on completed => '), c);
+        }
+    );
 
     obs.subscribe(function (v) {
         console.log('next item that was drained => ', v);
     });
 
-    obs.next('charlie');
+    obs.next();
 
 }, 1000);
 
 
-[1, 2, 3].forEach(function () {
-
-    q.add('foo bar baz', {isPublish: false})
-        .subscribe(function (data) {
-            if (data) {
-                console.log(' => add data => ', data);
-            }
-        });
-
-
-});
+// [1, 2, 3].forEach(function () {
+//
+//     q.enq('foo bar baz', {isPublish: false})
+//         .subscribe(function (data) {
+//             if (data) {
+//                 console.log(' => add data => ', data);
+//             }
+//         });
+//
+// });
 
 

@@ -12,9 +12,6 @@ const Rx = require('rxjs');
 //project
 const Queue = require('../lib/queue');
 
-process.on('warning', function (w) {
-    console.error(w.stack || w);
-});
 
 const q = new Queue({
     port: 8888,
@@ -48,7 +45,7 @@ setTimeout(function () {
         return function a() {
 
             const pauser = new Rx.Subject();
-            const obs = q.dequeueStream();
+            const obs = q.eqStream();
 
 
             obs.subscribe(

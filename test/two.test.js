@@ -15,10 +15,6 @@ const q = new Queue({
 });
 
 
-process.on('warning', function (w) {
-    console.error(w.stack || w);
-});
-
 const stderr = process.stderr.write;
 process.stderr.write = function (val) {
     stderr.apply(process.stderr, arguments);
@@ -32,7 +28,7 @@ function read() {
         const subs = new Array(5).fill().map(function (item, index) {
 
             return function () {
-                const obs = q.dequeueStream();
+                const obs = q.eqStream();
 
                 return obs.subscribe(
                     // x =>  { x && console.log('\n','1 next: ', util.inspect(x),'\n')},

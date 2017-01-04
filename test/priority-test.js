@@ -12,10 +12,6 @@ const Rx = require('rxjs');
 //project
 const Queue = require('../lib/queue');
 
-process.on('warning', function (w) {
-    console.error(w.stack || w);
-});
-
 const q = new Queue({
     port: 8888,
     filepath: path.resolve(process.env.HOME + '/dogs.txt'),
