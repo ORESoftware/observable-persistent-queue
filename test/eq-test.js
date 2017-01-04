@@ -32,17 +32,17 @@ fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning
 
 
 const pauser = new Rx.Subject();
-const obs = q.eqStream(pauser);
+const obs = q.eqStream();
 
 obs.subscribe(
     // x =>  { x && console.log('\n','1 next: ', util.inspect(x),'\n')},
-    x => {
+    v => {
 
-        console.log('\n', ' => next: ', util.inspect(x), '\n');
+        console.log('\n', ' => next: ', util.inspect(v), '\n');
 
         setTimeout(function () {
 
-            pauser.next();
+            v.cb();
 
         }, 1000);
 
@@ -52,14 +52,13 @@ obs.subscribe(
     () => console.log('\n', ' => completed')
 );
 
-pauser.next(true);
 
 
 
 
 setInterval(function () {
 
-    const c = q.add('foo bar baz', {isPublish: false})
+    const c = q.enq('foo bar baz', {isPublish: false})
         .subscribe(function (data) {
             if (data.error) {
                 console.error(data.error);

@@ -1,14 +1,17 @@
-/**
- * Created by oleg on 12/17/16.
- */
+'use striiict'
 
-
+//core
 const path = require('path');
 const util = require('util');
 const fs = require('fs');
-const colors = require('colors/safe');
 
+//npm
+const colors = require('colors/safe');
+const Rx = require('rxjs');
+
+//project
 const Queue = require('../lib/queue');
+
 
 const q = new Queue({
     port: 8888,
@@ -16,35 +19,35 @@ const q = new Queue({
 });
 
 
+// fs.writeFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), '');
+
 const stderr = process.stderr.write;
 process.stderr.write = function (val) {
     stderr.apply(process.stderr, arguments);
     fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), String(val));
 };
 
-setInterval(function(){
 
-    q.enq('zoom');
-
-}, 3000);
+fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning of log');
 
 
-
-const c = q.deq({min: 5, count: 5, wait: true})
+q.drain()
     .subscribe(
         function (v) {
-            console.log('\n', colors.green(' => zzz dequeue next: '), '\n', util.inspect(v));
+
+            console.log(' MF end result => ', colors.blue(util.inspect(v)));
+            setTimeout(function () {
+                v.cb();
+            }, 100);
+
         },
         function (e) {
-            console.log('\n', ' => zzz dequeue error: ', e.stack)
+            console.log('on error => ', e);
         },
         function () {
-            console.log('\n', colors.bgRed(' => zzz dequeue completed!! '))
+            console.log(colors.green(' DRAIN on completed '));
         }
     );
-
-
-
 
 
 

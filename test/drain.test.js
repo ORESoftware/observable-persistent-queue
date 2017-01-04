@@ -31,30 +31,42 @@ process.stderr.write = function (val) {
 fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning of log');
 
 
-setTimeout(function () {
+let obs = new Rx.Subject();
+// obs = obs.takeUntil(q.isEmpty(obs));
 
-    const obs = new Rx.Subject();
+q.drain(obs).subscribe(
 
-    q.drain(obs).subscribe(
-        function (v) {
-            console.log('end result => ', v);
+    function (v) {
+
+        console.log('end result => ', colors.yellow(util.inspect(v)));
+
+        setTimeout(function () {
             obs.next();
-        },
-        function (e) {
-            console.log('on error => ', e);
-        },
-        function (c) {
-            console.log(colors.red('on completed => '), c);
-        }
-    );
+        }, 1000);
 
-    obs.subscribe(function (v) {
+    },
+    function (e) {
+        console.log('on error => ', e);
+    },
+    function (c) {
+        console.log(colors.red(' DRAIN on completed => '), c);
+    }
+
+);
+
+obs.subscribe(
+    function (v) {
         console.log('next item that was drained => ', v);
-    });
+    },
+    function (e) {
+        console.log('on error => ', e);
+    },
+    function (c) {
+        console.log(colors.red(' => obs on completed => '), c);
+    }
+);
 
-    obs.next();
-
-}, 1000);
+// obs.next();
 
 
 // [1, 2, 3].forEach(function () {
