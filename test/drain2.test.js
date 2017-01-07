@@ -1,4 +1,4 @@
-'use striiict'
+'use striiict';
 
 //core
 const path = require('path');

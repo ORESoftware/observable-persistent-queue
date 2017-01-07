@@ -2,8 +2,6 @@ if priority is 1 and there are not any 1's in the first 20, we should cycle back
 
 need to make sure no unicode chars make it into the file, only utf8?
 
-is there a way to remove characters without truncating a file? as of now we can only overwrite characters with blanks
-
 https://blog.scottfrees.com/building-an-asynchronous-c-addon-for-node-js-using-nan
 
 v8+
@@ -18,3 +16,9 @@ http://stackoverflow.com/questions/41436698/give-integers-a-default-value-if-the
 http://stackoverflow.com/questions/34275717/rxjs-how-to-have-one-observer-process-multiple-observables
 
 http://reactivex.io/rxjs/class/es6/Subscriber.js~Subscriber.html
+
+https://www.thepolyglotdeveloper.com/2016/12/why-rxjs-is-the-hottest-way-to-handle-async/
+
+https://gist.github.com/btroncone/d6cf141d6f2c00dc6b35
+
+https://alexandergugel.svbtle.com/writing-custom-rxjs-5-operators

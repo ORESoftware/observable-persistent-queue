@@ -49,15 +49,16 @@ fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning
 
 setTimeout(function () {
 
-    const obs = new Rx.Subject();
 
-    q.drain(obs).subscribe(function (v) {
-        console.log('end result => ', v);
+    q.drain().subscribe(function (v) {
+        console.log('end result => ', v.data);
+
+        setTimeout(function(){
+            v.cb();
+        },1000);
     });
 
-    obs.subscribe(function (v) {
-        console.log('\n\n','next item that was drained => ', v,'\n\n');
-    });
+
 
 
 }, 3000);
@@ -65,19 +66,26 @@ setTimeout(function () {
 
 new Array(40).fill().forEach(function () {
 
-    const r = Math.floor(Math.random()*5);
+    const r = Math.floor(Math.random() * 5);
 
-    console.log('\n', ' => random => ', r,'\n');
+    console.log('\n', ' => random => ', r, '\n');
 
-    q.add('foo bar baz', {
+    q.enq('foo bar baz', {
         priority: r,
         isPublish: false
-    })
-        .subscribe(function (data) {
-            if (data) {
-                // console.log(' => add data => ', data);
+    }).subscribe(
+            function onNext(data) {
+                if (data) {
+                    console.log(' => add data => ', data);
+                }
+            },
+            function onError(e) {
+                console.error(e.stack || e);
+            },
+            function onComplete() {
+                console.log('complete.');
             }
-        });
+        );
 
 
 });

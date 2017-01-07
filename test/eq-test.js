@@ -38,7 +38,26 @@ obs.subscribe(
     // x =>  { x && console.log('\n','1 next: ', util.inspect(x),'\n')},
     v => {
 
-        console.log('\n', ' => next: ', util.inspect(v), '\n');
+        console.log('\n', ' => next 1: ', util.inspect(v), '\n');
+
+        setTimeout(function () {
+
+            v.cb();
+
+        }, 1000);
+
+
+    },
+    e => console.log('\n', ' => error: ', e.stack),
+    () => console.log('\n', ' => completed')
+);
+
+
+obs.subscribe(
+    // x =>  { x && console.log('\n','1 next: ', util.inspect(x),'\n')},
+    v => {
+
+        console.log('\n', ' => next 2: ', util.inspect(v), '\n');
 
         setTimeout(function () {
 
