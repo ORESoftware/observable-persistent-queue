@@ -7,6 +7,7 @@ const fs = require('fs');
 
 //npm
 const colors = require('colors/safe');
+
 const Rx = require('rxjs');
 
 //project
@@ -47,33 +48,40 @@ process.stderr.write = function (val) {
 fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning of log');
 
 
-setTimeout(function () {
+function drain() {
 
+    const s = Date.now();
+    const obs = q.drain();
 
-    q.drain().subscribe(function (v) {
-        console.log('end result => ', v.data);
+    obs.subscribe(
+        function (v) {
+            console.log('\n','end result => ','\n', v.data);
+            setTimeout(function(){
+                v.cb();
+            }, 20);
+        },
+        function (e) {
 
-        setTimeout(function(){
-            v.cb();
-        },1000);
-    });
+        },
+        function () {
+            console.log('complete');
+            console.log('time => ', Date.now() - s);
+        }
+    );
 
+    return obs;
+}
 
+Rx.Observable.interval(10)
+    .take(50)
+    .flatMap(function (val) {
 
+        const obs = q.enq('foo bar baz', {
+            priority: val,
+            isPublish: false
+        });
 
-}, 3000);
-
-
-new Array(40).fill().forEach(function () {
-
-    const r = Math.floor(Math.random() * 5);
-
-    console.log('\n', ' => random => ', r, '\n');
-
-    q.enq('foo bar baz', {
-        priority: r,
-        isPublish: false
-    }).subscribe(
+        obs.subscribe(
             function onNext(data) {
                 if (data) {
                     console.log(' => add data => ', data);
@@ -87,7 +95,28 @@ new Array(40).fill().forEach(function () {
             }
         );
 
+        return obs;
 
-});
+
+    })
+    .reduce(function (prev, curr) {
+        return prev.concat(curr);
+    },[])
+    .flatMap(function () {
+        return drain().last()
+    })
+    .subscribe(
+        function (v) {
+            console.log(colors.bgYellow('next => '), v);
+        },
+        function (e) {
+            console.error(e);
+        },
+        function () {
+            console.log(colors.bgRed('all done'));
+        }
+    );
+
+
 
 

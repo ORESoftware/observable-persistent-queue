@@ -22,3 +22,7 @@ https://www.thepolyglotdeveloper.com/2016/12/why-rxjs-is-the-hottest-way-to-hand
 https://gist.github.com/btroncone/d6cf141d6f2c00dc6b35
 
 https://alexandergugel.svbtle.com/writing-custom-rxjs-5-operators
+
+http://reactivex.io/rxjs/manual/overview.html#operators
+
+http://rxmarbles.com/#scan

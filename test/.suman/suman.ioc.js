@@ -8,8 +8,6 @@
 // ******************************************************************************************************************
 
 
-const http = require('http');
-
 
 module.exports = data => {  //load async deps for any of your suman tests
 
@@ -17,45 +15,12 @@ module.exports = data => {  //load async deps for any of your suman tests
 
         //the following are examples
 
-        //synchronous dependency acquisition
-        'example': function () {
-            return {'just':'an example'};
+        Rx: function(){
+           return require('rxjs');
         },
 
-        //asynchronous dependency acquisition, pass data back to test files using error-first callback
-        'example_dot_com': cb => {
-
-            http.get({
-
-                host: 'example.com',
-                port: 80,
-                path: '/',
-                agent: false
-
-            }, res => {
-
-
-                res.setEncoding('utf8');
-                var data = '';
-
-                res.on('data', d => {
-                    data += d;
-                });
-
-                res.on('end', () => {
-                    cb(null, data);
-                });
-            })
-        },
-
-        //asynchronous dependency acquisition, return a Promise
-
-        'fs_search' : () => {
-            return new Promise(function(resolve, reject){
-                  setTimeout(function(){
-                      resolve('some filesystem values')
-                  },1000);
-            });
+        Queue: function(){
+            return require('../../lib/queue');
         }
 
 
