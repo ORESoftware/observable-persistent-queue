@@ -29,3 +29,5 @@ http://rxmarbles.com/#scan
 
 https://github.com/ReactiveX/rxjs/blob/master/doc/operator-creation.md
 
+convert this to TS before converting suman to TS
+
