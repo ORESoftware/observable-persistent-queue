@@ -5,10 +5,10 @@ module.exports = Object.freeze({
     matchAny: [],
     matchNone: [/fixture/, /.*target/],
     matchAll: [/\.test\.js$/],
-    testDir: 'test',
-    testSrcDir: 'test/test-src',
-    testTargetDir: 'test/test-target',
-    sumanHelpersDir: 'test/.suman',
+    testDir: 'dist/test',
+    testSrcDir: 'dist/test/test-src',
+    testTargetDir: 'dist/test/test-target',
+    sumanHelpersDir: 'dist/test/suman',
     uniqueAppName: '<your-app-name-here>',
     browser: 'Firefox',
     errorsOnly: false,
@@ -47,7 +47,7 @@ module.exports = Object.freeze({
     expireResultsAfter: 10000000,
     coverage: {
         nyc: {
-            use: false
+            use: false,
         },
         istanbul: {}
     },
@@ -67,7 +67,7 @@ module.exports = Object.freeze({
                 include: [],
                 exclude: ['^test.*']
             }
-        }
+        },
     },
     reporters: {
         'tap': 'suman/reporters/tap'
@@ -80,7 +80,7 @@ module.exports = Object.freeze({
         '###': {
             host: '127.0.0.1',
             port: 6969
-        }
+        },
     },
     useBabelRegister: false,
     babelRegisterOpts: {

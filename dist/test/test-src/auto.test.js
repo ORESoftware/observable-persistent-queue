@@ -1,21 +1,15 @@
 'use strict';
-
-const suman = require('suman');
-const Test = suman.init(module, {
+var suman = require('suman');
+var Test = suman.init(module, {
     pre: ['create-test-dir']
 });
-
-
 Test.create(__filename, {}, function (assert, fs, path, suite, Queue, Rx, before, it) {
-
-    const id = suite.uniqueId;
-    const pre = userData['suman.once.pre.js'];
-    const p = pre['create-test-dir'];
-
+    var id = suite.uniqueId;
+    var pre = userData['suman.once.pre.js'];
+    var p = pre['create-test-dir'];
     console.log('p =>', p);
-    console.error(' => id => ',id);
-
-    const q = new Queue({
+    console.error(' => id => ', id);
+    var q = new Queue({
         port: 8888,
         fp: path.resolve(p + '/spaceships' + id + '.txt'),
         priority: {
@@ -36,37 +30,25 @@ Test.create(__filename, {}, function (assert, fs, path, suite, Queue, Rx, before
             ]
         }
     });
-
-    before(h => {
+    before(function (h) {
         return q.init();
     });
-
-    before(h => {
+    before(function (h) {
         return q.drain();
     });
-
-    const count = 3;
-
-    before('enqueues without explicit call to subscribe', t => {
-
-        const maps = [];
-
-        for (let i = 0; i < count; i++) {
+    var count = 3;
+    before('enqueues without explicit call to subscribe', function (t) {
+        var maps = [];
+        for (var i = 0; i < count; i++) {
             maps.push(q.enq('charlie'));
         }
-
-        return Rx.Observable.zip(...maps)
-;
+        return (_a = Rx.Observable).zip.apply(_a, maps);
+        var _a;
     });
-
-
-    it('assert queue has a size of [count]', t => {
-
+    it('assert queue has a size of [count]', function (t) {
         return q.getSize()
             .do(function (data) {
-                assert.equal(data.count, count, ' => Count is incorrect.');
-            });
-
+            assert.equal(data.count, count, ' => Count is incorrect.');
+        });
     });
-
 });

@@ -212,7 +212,7 @@ exports.acquireLockRetry = function _acquireLockRetry(queue, obj) {
         .takeUntil(Rx.Observable.race(acquireLock(queue, obj.name)
         .filter(function (obj) { return !obj.error; }), Rx.Observable.timer(2600)
         .flatMap(function () {
-        return Rx.Observable["throw"](' => Rx.Observable.throw => acquire lock timed out');
+        return Rx.Observable.throw(' => Rx.Observable.throw => acquire lock timed out');
     })));
 };
 exports.backpressure = function (queue, val, fn) {
@@ -342,7 +342,7 @@ exports.releaseLock = function _releaseLock(queue, lockUuid) {
     var client = queue.client;
     if (!lockUuid) {
         console.error('\n\n', new Error('Cannot release lock without force or proper uuid.').stack, '\n\n');
-        return Rx.Observable["throw"]('Cannot release lock without force or proper uuid.\n\n');
+        return Rx.Observable.throw('Cannot release lock without force or proper uuid.\n\n');
     }
     if (String(lockUuid).startsWith('<drain')) {
         drainUnlocks++;

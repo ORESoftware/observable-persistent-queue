@@ -47,7 +47,8 @@ p._enqControlled = function enqControlled(lines, opts) {
                 .map(function () { return obj; })
                 .flatMap(function (obj) { return releaseLock(_this, obj.id); });
         });
-    })["catch"](function (err) {
+    })
+        .catch(function (err) {
         console.error('\n', ' => add / enqueue error => \n', err.stack || err);
         var force = !String(e.stack || e).match(/acquire lock timed out/);
         return releaseLock(_this, force);
@@ -108,7 +109,8 @@ p._deqWait = function (opts) {
                 return false;
             });
         }
-    })["catch"](function (e) {
+    })
+        .catch(function (e) {
         console.error(e.stack || e);
         var force = !String(e.stack || e).match(/acquire lock timed out/);
         return releaseLock(_this, force);

@@ -95,7 +95,8 @@ function Queue(obj) {
         }).map(function () {
             return startTail(_this, push, clientEE);
         })
-            .take(1)["catch"](function (e) {
+            .take(1)
+            .catch(function (e) {
             console.error(e.stack || e);
             var force = !String(e.stack || e).match(/acquire lock timed out/);
             return releaseLock(_this, force);
@@ -135,7 +136,8 @@ Queue.prototype.eqStream = function (pauser, opts) {
                 cb: pauser.next.bind(pauser)
             };
         });
-    })["catch"](function (e) {
+    })
+        .catch(function (e) {
         console.error('\n', ' => Error in dequeueStream method => ', '\n', e.stack || e, '\n');
         var force = !String(e.stack || e).match(/acquire lock timed out/);
         return releaseLock(_this, force);
@@ -175,7 +177,8 @@ Queue.prototype.isNotEmpty = function (obs) {
         .map(function () {
         console.log(colors.yellow(' => Queue is *not* empty.'));
         return { isEmpty: false };
-    })["catch"](function (e) {
+    })
+        .catch(function (e) {
         console.error('\n', ' => isEmpty() error => \n', e.stack || e);
         var force = !String(e.stack || e).match(/acquire lock timed out/);
         return releaseLock(_this, force);
@@ -217,7 +220,8 @@ Queue.prototype.isEmpty = function (obs) {
         console.log(colors.yellow(' => Is empty is true.'));
         obs.isHellaComplete = true;
         return { isEmpty: true };
-    })["catch"](function (e) {
+    })
+        .catch(function (e) {
         console.error('\n', ' => isEmpty() error => \n', e.stack || e);
         var force = !String(e.stack || e).match(/acquire lock timed out/);
         return releaseLock(_this, force);
@@ -269,7 +273,8 @@ Queue.prototype.drain = function (obs, opts) {
                 }
             });
         });
-    })["catch"](function (e) {
+    })
+        .catch(function (e) {
         console.error('\n', ' => isEmpty() error => \n', e.stack || e);
         var force = !String(e.stack || e).match(/acquire lock timed out/);
         return releaseLock(_this, force);
@@ -311,7 +316,8 @@ Queue.prototype.enq = Queue.prototype.enqueue = function (lines, opts) {
         return appendFile(_this, lines, priority)
             .map(function () { return obj; });
     })
-        .flatMap(function (obj) { return releaseLock(_this, obj.id); })["catch"](function (err) {
+        .flatMap(function (obj) { return releaseLock(_this, obj.id); })
+        .catch(function (err) {
         console.error('\n', ' => add / enqueue error => \n', err.stack || err);
         var force = !String(err.stack || err).match(/acquire lock timed out/);
         return releaseLock(_this, force);
@@ -363,7 +369,8 @@ Queue.prototype.deq = Queue.prototype.dequeue = function (opts) {
         .flatMap(function (obj) {
         return releaseLock(_this, obj.id)
             .map(function () { return obj.lines; });
-    })["catch"](function (e) {
+    })
+        .catch(function (e) {
         console.error(e.stack || e);
         var force = !String(e.stack || e).match(/acquire lock timed out/);
         return releaseLock(_this, force);

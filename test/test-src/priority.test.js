@@ -4,11 +4,17 @@ const Test = suman.init(module, {});
 
 const colors = require('colors/safe');
 
-Test.create(__filename, {}, function (assert, fs, path, Queue, Rx) {
+Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userData) {
+
+    const id = suite.uniqueId;
+    const pre = userData['suman.once.pre.js'];
+    const p = pre['create-test-dir'];
+
+    console.error(' => id => ',id);
 
     const q = new Queue({
         port: 8888,
-        filepath: path.resolve(process.env.HOME + '/software_testing/dogs.txt'),
+        fp: path.resolve(p + '/spaceships' + id + '.txt'),
         priority: {
             first: 20,
             levels: [

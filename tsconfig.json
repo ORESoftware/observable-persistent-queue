@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
-    "module": "amd",
-    "noImplicitAny": true,
+    "target": "es5",
+    "noImplicitAny": false,
     "removeComments": true,
     "preserveConstEnums": true,
     "outDir": "dist",
-    "allowJs": true
+    "allowJs": true,
+    "allowUnreachableCode": true
   },
   "include": [
     "./**/*"
   ],
   "exclude": [
-    "test",
     "node_modules"
   ]
 }

@@ -31,3 +31,4 @@ https://github.com/ReactiveX/rxjs/blob/master/doc/operator-creation.md
 
 convert this to TS before converting suman to TS
 
+https://www.typescriptlang.org/docs/handbook/compiler-options.html

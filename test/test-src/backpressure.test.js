@@ -11,6 +11,8 @@ Test.create('backpressure',
         const pre = userData['suman.once.pre.js'];
         const p = pre['create-test-dir'];
 
+        console.error(' => id => ',id);
+
         const q = new Queue({
             port: 3500,
             fp: path.resolve(p + '/spaceships' + id + '.txt')

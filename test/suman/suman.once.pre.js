@@ -18,7 +18,10 @@ const rimraf = require('rimraf');
 
 module.exports = data => {
 
-    const pkgJSON = require('../../package.json');
+    // const pkgJSON = require('../../package.json');
+    const pkgJSON = {
+        name: 'observable-persistent-queue'
+    };
     const rootTestPath = path.join(process.env.HOME, 'software_testing', pkgJSON.name);
 
 
