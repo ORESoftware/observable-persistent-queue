@@ -17,4 +17,3 @@ q.enq('zoom')
     console.log('\n', ' => dequeue next: \n', util.inspect(x));
     process.exit(0);
 }, function (e) { return console.log('\n', ' => dequeue error: ', e.stack); }, function () { return console.log('\n', ' => dequeue completed!! '); });
-//# sourceMappingURL=enqueue.js.map

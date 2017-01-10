@@ -32,4 +32,3 @@ module.exports = function _handlePriority(obj, queue) {
     queue._priority.priorityCycleIndex = 0 + queue._priority.totalPriorityCycles;
     console.log(' => Total number of cycles => ', queue._priority.priorityCycleIndex);
 };
-//# sourceMappingURL=handle-priority.js.map

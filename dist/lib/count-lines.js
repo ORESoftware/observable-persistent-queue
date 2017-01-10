@@ -23,4 +23,3 @@ module.exports = function (file, rgx) {
         rl.on('line', onLine);
     });
 };
-//# sourceMappingURL=count-lines.js.map

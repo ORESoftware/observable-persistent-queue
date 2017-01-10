@@ -29,4 +29,3 @@ module.exports = function (file) {
         });
     });
 };
-//# sourceMappingURL=head.js.map

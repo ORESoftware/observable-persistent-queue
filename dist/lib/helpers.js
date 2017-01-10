@@ -366,4 +366,3 @@ exports.releaseLock = function _releaseLock(queue, lockUuid) {
         };
     });
 };
-//# sourceMappingURL=helpers.js.map

@@ -88,4 +88,3 @@ module.exports = Object.freeze({
         extensions: ['.es6', '.es', '.jsx', '.js']
     }
 });
-//# sourceMappingURL=suman.conf.js.map

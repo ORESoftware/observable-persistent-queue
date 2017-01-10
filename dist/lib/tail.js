@@ -22,4 +22,3 @@ module.exports = function (file) {
     });
     return n.stdout;
 };
-//# sourceMappingURL=tail.js.map

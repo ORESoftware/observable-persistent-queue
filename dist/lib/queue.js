@@ -376,4 +376,3 @@ Queue.prototype.deq = Queue.prototype.dequeue = function (opts) {
     return $dequeue;
 };
 module.exports = Queue;
-//# sourceMappingURL=queue.js.map

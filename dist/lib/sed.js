@@ -54,4 +54,3 @@ module.exports = function (queue, pattern, isReplace, $count) {
         });
     });
 };
-//# sourceMappingURL=sed.js.map

@@ -121,4 +121,3 @@ p._deqWait = function (opts) {
     return $dequeue;
 };
 module.exports = p;
-//# sourceMappingURL=queue-proto.js.map

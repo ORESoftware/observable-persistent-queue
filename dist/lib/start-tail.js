@@ -27,4 +27,3 @@ module.exports = function (queue, push, clientEE) {
         });
     });
 };
-//# sourceMappingURL=start-tail.js.map
