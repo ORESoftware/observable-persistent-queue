@@ -6,18 +6,18 @@ const Test = suman.init(module, {
 });
 
 
-Test.create(__filename, {}, function (assert, fs, path, suite, Queue, Rx, before, it) {
+Test.create(__filename, {}, function (assert, fs, path, userData, suite, Queue, Rx, before, it) {
 
     const id = suite.uniqueId;
     const pre = userData['suman.once.pre.js'];
     const p = pre['create-test-dir'];
-
-    console.log('p =>', p);
-    console.error(' => id => ',id);
+    console.error('pre =>', pre);
+    console.error('p =>', p);
+    console.error(' => id => ', id);
 
     const q = new Queue({
-        port: 8888,
-        fp: path.resolve(p + '/spaceships' + id + '.txt'),
+        port: 7779,
+        fp: path.resolve(p + '/spaceships-' + id + '.txt'),
         priority: {
             first: 20,
             levels: [
@@ -47,6 +47,18 @@ Test.create(__filename, {}, function (assert, fs, path, suite, Queue, Rx, before
 
     const count = 3;
 
+//     before('enqueues without explicit call to subscribe', t => {
+//
+//         const maps = [];
+//
+//         for (let i = 0; i < count; i++) {
+//             maps.push(q.enq('charlie'));
+//         }
+//
+//         return Rx.Observable.zip(...maps)
+// ;
+//     });
+
     before('enqueues without explicit call to subscribe', t => {
 
         const maps = [];
@@ -55,8 +67,16 @@ Test.create(__filename, {}, function (assert, fs, path, suite, Queue, Rx, before
             maps.push(q.enq('charlie'));
         }
 
-        return Rx.Observable.zip(...maps)
-;
+        Rx.Observable.timer(100)
+        //this works!
+            .subscribe();
+
+        Rx.Observable.zip([
+            // rahhh
+        ])
+            .do(function () {   // <<<< here is the problem
+
+            });
     });
 
 

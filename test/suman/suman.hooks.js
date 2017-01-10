@@ -9,13 +9,21 @@
 
 const fs = require('fs');
 const path = require('path');
+const util  = require('util');
 
 let id = 0;
 
 module.exports = (suite) => {
 
-    console.log('is running before');
-    suite.uniqueId = id++;
+    console.error('is running before');
+    console.error('suite.fileName => ', suite.fileName);
+
+    const fff = fs.statSync(suite.fileName);
+
+    console.error('fff => ', util.inspect(fff));
+    console.error('suite.fileName => ', suite.fileName);
+
+    suite.uniqueId = fff.ino;
 
     suite.before.cb(h => {
 

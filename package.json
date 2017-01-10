@@ -4,7 +4,7 @@
   "description": "Create a persistent message queue stored in a text file",
   "main": "dist/lib/queue.js",
   "scripts": {
-    "test": "suman"
+    "test": "./test.sh"
   },
   "repository": {
     "type": "git",

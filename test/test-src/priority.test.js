@@ -1,5 +1,7 @@
 const suman = require('suman');
-const Test = suman.init(module, {});
+const Test = suman.init(module, {
+    pre: ['create-test-dir']
+});
 
 
 const colors = require('colors/safe');
@@ -8,13 +10,18 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
 
     const id = suite.uniqueId;
     const pre = userData['suman.once.pre.js'];
+
+    console.error('pre =>', pre);
+
+
     const p = pre['create-test-dir'];
 
+    console.error('p =>', p);
     console.error(' => id => ',id);
 
     const q = new Queue({
         port: 8888,
-        fp: path.resolve(p + '/spaceships' + id + '.txt'),
+        fp: path.resolve(p + '/spaceships-' + id + '.txt'),
         priority: {
             first: 20,
             levels: [
@@ -166,5 +173,4 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
 
     });
 
-})
-;
+});
