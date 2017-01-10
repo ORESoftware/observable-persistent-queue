@@ -9,7 +9,7 @@
 
 
 
-module.exports = data => {  //load async deps for any of your suman tests
+module.exports = data => {
 
     return {
 

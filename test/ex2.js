@@ -5,22 +5,25 @@
 
 const Rx = require('rxjs');
 
-var i = 3;
 
 const obs = Rx.Observable.interval(10)
-    .map(() => i++)
-    .map(function(val){
-        return Rx.Observable.create(obs => {
-            obs.next(val)
-        });
-    })
     .take(10)
-    .concatMap(function(val){
-        console.log('val => ', val);
-        return val;
+    .do(function (val) {
+        console.log(val);
     });
 
+obs.reduce(function (prev, curr) {
+    return prev.concat(curr)
+}, [])
+    .map(function(val){
+        console.log('val => ', val);
+    })
+    .subscribe();
 
-obs.subscribe(function(v){
-    console.log(v);
-});
+// obs.subscribe(
+//     null,
+//     null,
+//     function () {
+//         console.log('complete');
+//     }
+// );

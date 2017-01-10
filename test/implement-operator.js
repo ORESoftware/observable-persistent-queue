@@ -20,13 +20,12 @@ const Rx = require('rxjs');
 // };
 
 
-Rx.Observable.prototype.fit = function (val) {
+Rx.Observable.prototype.fit = function () {
 
     const source = this;
 
     return Rx.Observable.create(function (obs) {
         // Our disposable is the subscription from the parent
-
         return source.subscribe(function(val){
             obs.next(3*val);
         });

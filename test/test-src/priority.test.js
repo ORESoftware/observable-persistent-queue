@@ -8,7 +8,7 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx) {
 
     const q = new Queue({
         port: 8888,
-        filepath: path.resolve(process.env.HOME + '/dogs.txt'),
+        filepath: path.resolve(process.env.HOME + '/software_testing/dogs.txt'),
         priority: {
             first: 20,
             levels: [
@@ -28,22 +28,8 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx) {
         }
     });
 
-    this.before.cb(h => {
-
-        q.init().subscribe(
-            function (v) {
-                console.log(v);
-            },
-            function (e) {
-                console.error(e);
-                h.fail(e);
-            },
-            function () {
-                console.log('complete');
-                h.done();
-            }
-        )
-
+    this.before(h => {
+        return q.init();
     });
 
     this.before.cb({timeout: 5000}, h => {
@@ -64,15 +50,13 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx) {
     this.before.cb({timeout: 5000}, h => {
 
         Rx.Observable.interval(10)
-            .take(5)
-            .flatMap(function (val) {
+            .take(30)
+            .map(function (val) {
                 return q.enq('foo bar baz', {
                     priority: val
                 });
             })
-            .reduce(function (prev, curr) {
-                return prev.concat(curr);
-            }, [])
+            .concatAll()
             .subscribe(
                 function (v) {
                     console.log(colors.yellow.bold('next => '), v);
@@ -100,18 +84,17 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx) {
 
     });
 
-    var i = 0;
 
     this.it.cb('drains queue', {timeout: 6000}, t => {
 
         const s = Date.now();
-        q.drain()
+        q.drain({backpressure: true})
+            .backpressure(function (data,cb) {
+                setTimeout(cb, 10);
+            })
             .subscribe(
                 function (v) {
-                    console.log(colors.yellow.bold(' next enqueue item => '),'\n', v);
-                    setTimeout(function(){
-                        v.cb();
-                    }, 20);
+                    console.log(colors.yellow.bold(' next enqueue item => '), '\n', v);
                 },
                 t.fail,
                 function () {
@@ -136,7 +119,7 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx) {
     });
 
 
-    this.after.cb({timeout: 8000}, h => {
+    this.after.cb({timeout: 2000}, h => {
 
 
         q.getClient().requestLockInfo(q.getLock(), function (err, data) {
@@ -145,17 +128,12 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx) {
                 return h.fail(err);
             }
 
-            console.log('\n', ' => Locked data before empty => ', data, '\n');
+            console.log('\n', ' => Locked data before isEmpty() => ', data, '\n');
 
-            const s = new Rx.Subject();
-
-            process.nextTick(function () {
-                s.next();
-            });
-
-            q.isEmpty(s).subscribe(
+            q.getSize().subscribe(
                 function (v) {
                     console.log('v => ', v);
+                    assert.equal(v.count,0, ' => Count is not correct.');
                 },
                 function (e) {
                     console.error(e);
@@ -182,4 +160,5 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx) {
 
     });
 
-});
+})
+;

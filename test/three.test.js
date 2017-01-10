@@ -11,7 +11,7 @@ const Queue = require('../lib/queue');
 
 const q = new Queue({
     port: 7575,
-    filepath: path.resolve(process.env.HOME + '/dogs.txt')
+    filepath: path.resolve(process.env.HOME + '/software_testing/dogs.txt')
 });
 
 

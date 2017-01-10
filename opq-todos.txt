@@ -26,3 +26,6 @@ https://alexandergugel.svbtle.com/writing-custom-rxjs-5-operators
 http://reactivex.io/rxjs/manual/overview.html#operators
 
 http://rxmarbles.com/#scan
+
+https://github.com/ReactiveX/rxjs/blob/master/doc/operator-creation.md
+

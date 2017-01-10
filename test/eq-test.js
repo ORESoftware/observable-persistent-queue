@@ -15,20 +15,18 @@ const Queue = require('../lib/queue');
 
 const q = new Queue({
     port: 8888,
-    filepath: path.resolve(process.env.HOME + '/dogs.txt')
+    filepath: path.resolve(process.env.HOME + '/software_testing/dogs.txt')
 });
 
-
-// fs.writeFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), '');
 
 const stderr = process.stderr.write;
 process.stderr.write = function (val) {
     stderr.apply(process.stderr, arguments);
-    fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), String(val));
+    fs.appendFileSync(path.resolve(process.env.HOME + '/software_testing/dogs.debug.txt'), String(val));
 };
 
 
-fs.appendFileSync(path.resolve(process.env.HOME + '/dogs.debug.txt'), 'beginning of log');
+fs.appendFileSync(path.resolve(process.env.HOME + '/software_testing/dogs.debug.txt'), 'beginning of log');
 
 
 const pauser = new Rx.Subject();
