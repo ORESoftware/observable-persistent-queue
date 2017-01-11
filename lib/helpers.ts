@@ -6,6 +6,7 @@ import fs = require('fs');
 import path = require('path');
 import assert = require('assert');
 import cp = require('child_process');
+import EE = require('events');
 
 //npm
 import Rx = require('rxjs');
@@ -16,6 +17,7 @@ import colors = require('colors/safe');
 //project
 import sed = require('./sed');
 import _countLines = require('./count-lines');
+import {Queue} from "./queue";
 const debug = require('debug')('cmd-queue');
 const a = require('./test');
 
@@ -34,7 +36,8 @@ let count = 0;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-export function makeEEObservable(queue: any, ee: any, opts: any) {
+
+export function makeEEObservable(queue: Queue, ee: EE, opts: Object) {
 
     opts = opts || {};
     const isCallCompleted = opts.isCallCompleted;
@@ -73,7 +76,7 @@ export function makeEEObservable(queue: any, ee: any, opts: any) {
     return obs;
 }
 
-export function makeGenericObservable(fn: any, opts: any) {
+export function makeGenericObservable(fn: Function, opts: Object) {
 
     opts = opts || {};
     const isCallCompleted = opts.isCallCompleted;
@@ -112,12 +115,12 @@ export function makeGenericObservable(fn: any, opts: any) {
 }
 
 
-export function countLines(queue: any, pattern: any) {
+export function countLines(queue: Queue, pattern: string | null) {
     return _countLines(queue.fp, pattern);
 }
 
 
-export function findFirstLine(queue: any, pattern: any) {
+export function findFirstLine(queue: any, pattern: string | null) {
 
     pattern = pattern || '\\S+';
 
@@ -130,7 +133,7 @@ export function findFirstLine(queue: any, pattern: any) {
 }
 
 
-export function removeOneLine(queue: any, pattern: any) {
+export function removeOneLine(queue: Queue, pattern: string | null) {
 
     pattern = pattern || '\\S+';
 
@@ -147,7 +150,7 @@ export function removeOneLine(queue: any, pattern: any) {
 }
 
 
-export function removeMultipleLines(queue: any, pattern: any, count: any) {
+export function removeMultipleLines(queue: Queue, pattern: any, count: any) {
 
     return sed(queue, pattern, 'true', count)
         .map(data => {
@@ -158,7 +161,7 @@ export function removeMultipleLines(queue: any, pattern: any, count: any) {
 
 }
 
-export function writeFile(queue: any, data: any) {
+export function writeFile(queue: Queue, data: any) {
 
     const filePath = queue.fp;
     data = data || '';
@@ -182,7 +185,7 @@ export function writeFile(queue: any, data: any) {
 }
 
 
-export function appendFile(queue: any, lines: any, priority: any) {
+export function appendFile(queue: Queue, lines: any, priority: any) {
 
     const filePath = queue.fp;
 
@@ -235,7 +238,7 @@ export function delayObservable(delay: any, isCompleted: any) {
     });
 }
 
-export function ifFileExistAndIsAllWhiteSpaceThenTruncate(queue: any) {
+export function ifFileExistAndIsAllWhiteSpaceThenTruncate(queue: Queue) {
 
     return readFile(queue)
         .flatMap(data => {
@@ -251,7 +254,7 @@ export function ifFileExistAndIsAllWhiteSpaceThenTruncate(queue: any) {
 }
 
 
-export function genericAppendFile(queue: any, data: any) {
+export function genericAppendFile(queue: Queue, data: any) {
 
     const d = data || '';
     const fp = queue.filepath;
@@ -276,7 +279,7 @@ export function genericAppendFile(queue: any, data: any) {
     });
 }
 
-export function acquireLockRetry(queue: any, obj: any) {
+export function acquireLockRetry(queue: Queue, obj: any) {
 
     if (!obj.error) {
         return makeGenericObservable(null, null)
@@ -302,7 +305,7 @@ export function acquireLockRetry(queue: any, obj: any) {
 }
 
 
-export function backpressure(queue: any, val: any, fn: any) {
+export function backpressure(queue: Queue, val: Object, fn: Function) {
 
     return Rx.Observable.create(sub => {
 
@@ -325,7 +328,7 @@ export function backpressure(queue: any, val: any, fn: any) {
 }
 
 
-export function readFile$(queue: any) {
+export function readFile$(queue: Queue) {
 
     const fp = queue.filepath;
 
@@ -402,7 +405,7 @@ export function readFile(queue: any) {
 }
 
 
-export function waitForClientCount(queue: any, opts: any) {
+export function waitForClientCount(queue: Queue, opts: Object) {
 
     opts = opts || {};
     const count = opts.count || 5;
@@ -429,7 +432,7 @@ export function waitForClientCount(queue: any, opts: any) {
 }
 
 
-export function acquireLock(queue: any, name: any) {
+export function acquireLock(queue: Queue, name: string) {
 
     const lock = queue.lock;
     const client = queue.client;
@@ -475,7 +478,7 @@ export function acquireLock(queue: any, name: any) {
     });
 }
 
-export function releaseLock(queue: any, lockUuid: any) {
+export function releaseLock(queue: Queue, lockUuid: string | boolean) {
 
     const client = queue.client;
 

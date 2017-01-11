@@ -33,6 +33,18 @@ const {
 
 export abstract class QProto {
 
+    lock: string;
+    client: Client;
+    init: Function;
+    dateCreated: Date;
+
+    constructor(obj){
+
+        this.lock = ['[OPQ]>', uuidV4()].join('');
+        this.dateCreated = new Date();
+
+    }
+
     getLock() {
         return this.lock;
     }

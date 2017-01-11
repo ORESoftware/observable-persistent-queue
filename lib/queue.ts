@@ -17,7 +17,7 @@ const debug = require('debug')('cmd-queue');
 import EE = require('events');
 import Client = require('live-mutex/client');
 import lmUtils = require('live-mutex/utils');
-import qProto = require('./queue-proto');
+import {QProto} from './queue-proto';
 import handlePriority = require('./handle-priority');
 import startTail = require('./start-tail');
 
@@ -45,9 +45,10 @@ process.on('warning', function (w) {
 //we could use console.time, but this is fine
 const start = Date.now();
 
-
+// helper functions
 const {
 
+    backpressure,
     countLines,
     acquireLock,
     releaseLock,
@@ -66,23 +67,24 @@ const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-export class Queue {
+export class Queue extends QProto {
 
-    filepath:string;
-    fp:string;
-    dateCreated: Date;
+    filepath: string;
+    fp: string;
     port: number;
     isEmptyStream: Rx.Subject;
     obsDequeue: Rx.Subject;
     obsEnqueue: Rx.Subject;
     obsClient: Rx.Subject;
-    lock: string;
     queueStream: Rx.Observable;
     init: Function;
     isReady: boolean;
-    client: Client;
+    priority: Object;
+    _priority: Object;
 
     constructor(obj: any) {
+
+        super(obj);
 
         assert(typeof obj === 'object',
             ' => OPQ usage error => Please pass in an options object to the Queue constructor.');
@@ -92,9 +94,7 @@ export class Queue {
         assert(String(fp).length > 0, ' => Please pass the filepath of the queue.');
         assert(Number.isInteger(port), ' => Please pass in an integer for the port.');
 
-        const lck = this.lock = ['[OPQ]>', uuidV4()].join('');
-
-        this.dateCreated = new Date();
+        const lck = this.lock;
 
         if (obj.priority) {
             handlePriority(obj, this);
@@ -192,375 +192,381 @@ export class Queue {
     }
 
 
+    eqStream(pauser: Rx.Subject, opts: any) {
 
+        if (!(pauser instanceof Rx.Observable)) {
+            opts = pauser || {};
+            pauser = new Rx.Subject();
+        }
 
-Queue.prototype.eqStream = function (pauser: any, opts: any) {
+        opts = opts || {};
 
-    if (!(pauser instanceof Rx.Observable)) {
-        opts = pauser || {};
-        pauser = new Rx.Subject();
-    }
+        let $obs = Rx.Observable.zip(
+            this.queueStream,
+            pauser
+        );
 
-    opts = opts || {};
-
-    let $obs = Rx.Observable.zip(
-        this.queueStream,
-        pauser
-    );
-
-    process.nextTick(function () {
-        pauser.next();
-    });
-
-    return $obs
-        .flatMap(() => this.init())
-        .flatMap(() => {
-            return acquireLock(this, 'eqStream')
-                .flatMap(obj => {
-                    return acquireLockRetry(this, obj)
-                });
-        })
-        .flatMap((obj:any) => {
-            return removeOneLine(this)
-                .map(l => ({l: l, id: obj.id}));
-        })
-        .flatMap((obj:any) => {
-            return releaseLock(this, obj.id)
-                .filter(() => obj.l)
-                .map(() => {
-                    return {
-                        data: obj.l,
-                        cb: pauser.next.bind(pauser)
-                    };
-                });
-        })
-        .catch(e => {
-            console.error('\n', ' => Error in dequeueStream method => ', '\n', e.stack || e, '\n');
-            const force = !String(e.stack || e).match(/acquire lock timed out/);
-            return releaseLock(this, force);
+        process.nextTick(function () {
+            pauser.next();
         });
 
+        return $obs
+            .flatMap(() => this.init())
+            .flatMap(() => {
+                return acquireLock(this, 'eqStream')
+                    .flatMap(obj => {
+                        return acquireLockRetry(this, obj)
+                    });
+            })
+            .flatMap((obj: any) => {
+                return removeOneLine(this, null)
+                    .map(l => ({l: l, id: obj.id}));
+            })
+            .flatMap((obj: any) => {
+                return releaseLock(this, obj.id)
+                    .filter(() => obj.l)
+                    .map(() => {
+                        return {
+                            data: obj.l,
+                            cb: pauser.next.bind(pauser)
+                        };
+                    });
+            })
+            .catch(e => {
+                console.error('\n', ' => Error in dequeueStream method => ', '\n', e.stack || e, '\n');
+                const force = !String(e.stack || e).match(/acquire lock timed out/);
+                return releaseLock(this, force);
+            });
 
-};
 
-Queue.prototype.readAll = function () {
-    return this.obsEnqueue;
-};
-
-
-Queue.prototype.isNotEmpty = function (obs: any) {
-
-    if (!obs) {
-        obs = new Rx.Subject();
     }
 
-    // process.nextTick(function () {
-    //     obs.next();
-    // });
-
-    return obs
-        .startWith(0)
-        .flatMap(() => {
-            return this.init(); // // when you call obs.next(), it should fire this chain again
-        })
-        .flatMap(() => {
-            return acquireLock(this, '<isEmpty>')
-                .flatMap(obj => {
-                    return acquireLockRetry(this, obj)
-                })
-        })
-        .flatMap(obj => {
-            return findFirstLine(this)
-                .flatMap(l => {
-                    return releaseLock(this, obj.id)
-                        .map(() => {
-                            return l;
-                        });
-                });
-        })
-        .filter(l => {
-            // filter out any lines => only fire event if there is no line
-            return l;
-        })
-        .map(() => {
-            console.log(colors.yellow(' => Queue is *not* empty.'));
-            return {isEmpty: false}
-        })
-        .catch(e => {
-            console.error('\n', ' => isEmpty() error => \n', e.stack || e);
-            const force = !String(e.stack || e).match(/acquire lock timed out/);
-            return releaseLock(this, force);
-        })
-        .take(1);
-
-};
+    readAll() {
+        return this.obsEnqueue;
+    }
 
 
-Queue.prototype.isEmpty = function (obs: any) {
+    isNotEmpty(obs: any) {
 
-    if (!obs) {
-        obs = new Rx.Subject();
+        if (!obs) {
+            obs = new Rx.Subject();
+        }
+
+        // process.nextTick(function () {
+        //     obs.next();
+        // });
+
+        return obs
+            .startWith(0)
+            .flatMap(() => {
+                return this.init(); // // when you call obs.next(), it should fire this chain again
+            })
+            .flatMap(() => {
+                return acquireLock(this, '<isEmpty>')
+                    .flatMap(obj => {
+                        return acquireLockRetry(this, obj)
+                    })
+            })
+            .flatMap(obj => {
+                return findFirstLine(this, null)
+                    .flatMap(l => {
+                        return releaseLock(this, obj.id)
+                            .map(() => {
+                                return l;
+                            });
+                    });
+            })
+            .filter(l => {
+                // filter out any lines => only fire event if there is no line
+                return l;
+            })
+            .map(() => {
+                console.log(colors.yellow(' => Queue is *not* empty.'));
+                return {isEmpty: false}
+            })
+            .catch(e => {
+                console.error('\n', ' => isEmpty() error => \n', e.stack || e);
+                const force = !String(e.stack || e).match(/acquire lock timed out/);
+                return releaseLock(this, force);
+            })
+            .take(1);
+
+    }
+
+
+    isEmpty(obs: any) {
+
+        if (!obs) {
+            obs = new Rx.Subject();
+
+            process.nextTick(function () {
+                obs.next();
+            });
+        }
+
+        return obs
+            .startWith(0)
+            .flatMap(() => {
+                return this.init(); // // when you call obs.next(), it should fire this chain again
+            })
+            .flatMap(() => {
+                return acquireLock(this, '<isEmpty>')
+                    .flatMap(obj => {
+                        return acquireLockRetry(this, obj)
+                    })
+            })
+            .flatMap(obj => {
+                return findFirstLine(this, null)
+                    .flatMap(l => {
+                        return releaseLock(this, obj.id)
+                            .map(() => {
+                                return l;
+                            });
+                    });
+            })
+            .filter(l => {
+                // filter out any lines => only fire event if there is no line
+                return !l;
+            })
+            .map(() => {
+                console.log(colors.yellow(' => Is empty is true.'));
+                obs.isHellaComplete = true;
+                // obs.complete();
+                return {isEmpty: true}
+            })
+            .catch(e => {
+                console.error('\n', ' => isEmpty() error => \n', e.stack || e);
+                const force = !String(e.stack || e).match(/acquire lock timed out/);
+                return releaseLock(this, force);
+            })
+            .take(1);
+
+    }
+
+
+    drain(obs: any, opts: any) {
+
+        if (!(obs instanceof Rx.Observable)) {
+            opts = obs || {};
+            obs = new Rx.Subject();
+        }
+
+        opts = opts || {};
+        assert(typeof opts === 'object' && !Array.isArray(opts), ' => OPQ usage error => opts must be an object.');
+
+        const backpressure = opts.backpressure === true;
+        const isConnect = opts.isConnect === true;
+        const delay = opts.delay || 500;
+
+        //TODO: if force, we drain the queue even if there are no subscribers to this observable
+        //TODO: otherwise if there are no subscribers, the callback will never fire
+        const force = opts.force;
 
         process.nextTick(function () {
             obs.next();
         });
-    }
 
-    return obs
-        .startWith(0)
-        .flatMap(() => {
-            return this.init(); // // when you call obs.next(), it should fire this chain again
-        })
-        .flatMap(() => {
-            return acquireLock(this, '<isEmpty>')
-                .flatMap(obj => {
-                    return acquireLockRetry(this, obj)
-                })
-        })
-        .flatMap(obj => {
-            return findFirstLine(this)
-                .flatMap(l => {
-                    return releaseLock(this, obj.id)
-                        .map(() => {
-                            return l;
-                        });
-                });
-        })
-        .filter(l => {
-            // filter out any lines => only fire event if there is no line
-            return !l;
-        })
-        .map(() => {
-            console.log(colors.yellow(' => Is empty is true.'));
-            obs.isHellaComplete = true;
-            // obs.complete();
-            return {isEmpty: true}
-        })
-        .catch(e => {
-            console.error('\n', ' => isEmpty() error => \n', e.stack || e);
-            const force = !String(e.stack || e).match(/acquire lock timed out/);
-            return releaseLock(this, force);
-        })
-        .take(1);
+        const emptyObs = new Rx.Subject();
 
-};
-
-
-Queue.prototype.drain = function (obs: any, opts: any) {
-
-    if (!(obs instanceof Rx.Observable)) {
-        opts = obs || {};
-        obs = new Rx.Subject();
-    }
-
-    opts = opts || {};
-    assert(typeof opts === 'object' && !Array.isArray(opts), ' => OPQ usage error => opts must be an object.');
-
-    const backpressure = opts.backpressure === true;
-    const isConnect = opts.isConnect === true;
-    const delay = opts.delay || 500;
-
-    //TODO: if force, we drain the queue even if there are no subscribers to this observable
-    //TODO: otherwise if there are no subscribers, the callback will never fire
-    const force = opts.force;
-
-    process.nextTick(function () {
-        obs.next();
-    });
-
-    const emptyObs = new Rx.Subject();
-
-    let $obs = obs
-        .takeWhile(() => {
-            return this.isNotEmpty();
-        })
-        // .startWith(0)
-        .flatMap(() => {
-            return this.init();
-        })
-        .flatMap(() => {
-            return acquireLock(this, '<drain>')
-                .flatMap(obj => {
-                    return acquireLockRetry(this, obj)
-                });
-        })
-        .flatMap(obj => {
-            return removeOneLine(this)
-                .flatMap(l => {
-                    return releaseLock(this, obj.id)
-                        .map(() => {
-                            emptyObs.next();
-                            const bound = obs.next.bind(obs);
-                            if (backpressure) {
-                                return {data: l, cb: bound};
-                            }
-                            else {
-                                process.nextTick(bound);
-                                return {data: l};
-                            }
-                        });
-                });
-        })
-        .catch(e => {
-            console.error('\n', ' => isEmpty() error => \n', e.stack || e);
-            const force = !String(e.stack || e).match(/acquire lock timed out/);
-            return releaseLock(this, force);
-        })
-        .takeUntil(this.isEmpty(emptyObs));
+        let $obs = obs
+            .takeWhile(() => {
+                return this.isNotEmpty();
+            })
+            // .startWith(0)
+            .flatMap(() => {
+                return this.init();
+            })
+            .flatMap(() => {
+                return acquireLock(this, '<drain>')
+                    .flatMap(obj => {
+                        return acquireLockRetry(this, obj)
+                    });
+            })
+            .flatMap(obj => {
+                return removeOneLine(this, null)
+                    .flatMap(l => {
+                        return releaseLock(this, obj.id)
+                            .map(() => {
+                                emptyObs.next();
+                                const bound = obs.next.bind(obs);
+                                if (backpressure) {
+                                    return {data: l, cb: bound};
+                                }
+                                else {
+                                    process.nextTick(bound);
+                                    return {data: l};
+                                }
+                            });
+                    });
+            })
+            .catch(e => {
+                console.error('\n', ' => isEmpty() error => \n', e.stack || e);
+                const force = !String(e.stack || e).match(/acquire lock timed out/);
+                return releaseLock(this, force);
+            })
+            .takeUntil(this.isEmpty(emptyObs));
 
 
-    if (isConnect) {
-        $obs = $obs.publish();
-        $obs.connect();
-    }
+        if (isConnect) {
+            $obs = $obs.publish();
+            $obs.connect();
+        }
 
-    return $obs;
-
-};
-
-
-Queue.prototype.backpressure = function (val: any, fn: any) {
-    return backpressure(this, val, fn);
-};
-
-
-Queue.prototype.clearQueue = function () {
-
-    // should just truncate file
-
-};
-
-Queue.prototype.getSize = function () {
-    return countLines(this);
-};
-
-
-Queue.prototype.enq = Queue.prototype.enqueue = function (lines: any, opts: any) {
-
-    opts = opts || {};
-
-    if (opts.controlled) {
-        return this._enqControlled(lines, opts);
-    }
-
-    const priority = opts.priority || 1;
-    if(opts.priority){
-        assert(typeof this._priority === 'object', ' => You used the priority option to enqueue an item,' +
-            ' but this queue was not initialized with priority data.');
-
-        let il = this._priority.internalLevels;
-        const highestLevel = il[0];
-        assert(Number.isInteger(priority),
-            ' => Priority option must be an integer, between 1 and ' + highestLevel + ', inclusive.');
+        return $obs;
 
     }
 
 
-    const isShare = opts.isShare === true;
-
-    lines = _.flattenDeep([lines]).map(function (l) {
-        // remove unicode characters because they will mess up
-        // our replace-line algorithm
-        return String(l).replace(/[^\x00-\x7F]/g, '');
-    });
-
-    let $add = this.init()
-        .flatMap(() => {
-            return acquireLock(this, '<enqueue>')
-                .flatMap(obj => {
-                    return acquireLockRetry(this, obj)
-                });
-        })
-        .flatMap(obj => {
-            return appendFile(this, lines, priority)
-                .map(() => obj);
-        })
-        .flatMap(obj => releaseLock(this, obj.id))
-        .catch(err => {
-            console.error('\n', ' => add / enqueue error => \n', err.stack || err);
-            const force = !String(err.stack || err).match(/acquire lock timed out/);
-            return releaseLock(this, force);
-
-        })
-        // only take one, then we are done and should fire onComplete()
-        .take(1);
-
-    if (isShare) {
-        // share() should be equivalent to publish().refCount()
-        $add = $add.share();
-        $add.subscribe();
-    }
-
-    return $add;
-
-};
-
-
-Queue.prototype.deq = Queue.prototype.dequeue = function (opts: any) {
-
-    if (!opts || !opts.lines) {
-
-        opts = Object.assign({
-            youngerThan: null,
-            olderThan: null,
-            min: 0,
-            count: 1,
-            wait: false,
-            pattern: '\\S+'
-
-        }, opts);
-
-        opts.lines = [];
+    backpressure(val: any, fn: any) {
+        return backpressure(this, val, fn);
     }
 
 
-    if (opts.wait) {
-        return this._deqWait(opts);
+    clearQueue() {
+        // should just truncate file
     }
 
-    const isPriority = this.priority ?
-        (opts.isPriority !== false) :
-        (opts.isPriority === true);
-
-
-    const count = opts.count;
-    const isConnect = opts.isConnect !== false;
-    const pattern = opts.pattern;
-    const min = opts.min;
-
-
-    let $dequeue = this.init()
-        .flatMap(() => {
-            return acquireLock(this, '<dequeue>')
-                .flatMap(obj => {
-                    return acquireLockRetry(this, obj)
-                })
-                .map(obj =>
-                    ({error: obj.error, id: obj.id, opts: opts}))
-
-        })
-        .flatMap(obj => {
-            return removeMultipleLines(this, pattern, count)
-                .map(lines => ({lines: lines, id: obj.id}))
-        })
-        .flatMap(obj => {
-            return releaseLock(this, obj.id)
-                .map(() => obj.lines)
-        })
-        .catch(e => {
-            console.error(e.stack || e);//
-            const force = !String(e.stack || e).match(/acquire lock timed out/);
-            return releaseLock(this, force);
-        })
-        // only take one, then we are done and should fire onComplete()
-        .take(1);
-
-    if (isConnect) {
-        $dequeue = $dequeue.publish();
-        $dequeue.connect();
+    getSize() {
+        return countLines(this, null);
     }
 
-    return $dequeue;
 
-};
+    enqueue(lines: any, opts: any) {
+        return this.enq(lines, opts);
+    }
+
+    enq(lines: any, opts: any) {
+
+        opts = opts || {};
+
+        if (opts.controlled) {
+            return this._enqControlled(lines, opts);
+        }
+
+        const priority = opts.priority || 1;
+        if (opts.priority) {
+            assert(typeof this._priority === 'object', ' => You used the priority option to enqueue an item,' +
+                ' but this queue was not initialized with priority data.');
+
+            let il = this._priority.internalLevels;
+            const highestLevel = il[0];
+            assert(Number.isInteger(priority),
+                ' => Priority option must be an integer, between 1 and ' + highestLevel + ', inclusive.');
+
+        }
+
+
+        const isShare = opts.isShare === true;
+
+        lines = _.flattenDeep([lines]).map(function (l) {
+            // remove unicode characters because they will mess up
+            // our replace-line algorithm
+            return String(l).replace(/[^\x00-\x7F]/g, '');
+        });
+
+        let $add = this.init()
+            .flatMap(() => {
+                return acquireLock(this, '<enqueue>')
+                    .flatMap(obj => {
+                        return acquireLockRetry(this, obj)
+                    });
+            })
+            .flatMap(obj => {
+                return appendFile(this, lines, priority)
+                    .map(() => obj);
+            })
+            .flatMap(obj => releaseLock(this, obj.id))
+            .catch(err => {
+                console.error('\n', ' => add / enqueue error => \n', err.stack || err);
+                const force = !String(err.stack || err).match(/acquire lock timed out/);
+                return releaseLock(this, force);
+
+            })
+            // only take one, then we are done and should fire onComplete()
+            .take(1);
+
+        if (isShare) {
+            // share() should be equivalent to publish().refCount()
+            $add = $add.share();
+            $add.subscribe();
+        }
+
+        return $add;
+
+    };
+
+
+    dequeue(opts: any) {
+        return this.deq(opts);
+
+    }
+
+    deq(opts: any) {
+
+        if (!opts || !opts.lines) {
+
+            opts = Object.assign({
+                youngerThan: null,
+                olderThan: null,
+                min: 0,
+                count: 1,
+                wait: false,
+                pattern: '\\S+'
+
+            }, opts);
+
+            opts.lines = [];
+        }
+
+
+        if (opts.wait) {
+            return this._deqWait(opts);
+        }
+
+        const isPriority = this.priority ?
+            (opts.isPriority !== false) :
+            (opts.isPriority === true);
+
+
+        const count = opts.count;
+        const isConnect = opts.isConnect !== false;
+        const pattern = opts.pattern;
+        const min = opts.min;
+
+
+        let $dequeue = this.init()
+            .flatMap(() => {
+                return acquireLock(this, '<dequeue>')
+                    .flatMap(obj => {
+                        return acquireLockRetry(this, obj)
+                    })
+                    .map(obj =>
+                        ({error: obj.error, id: obj.id, opts: opts}))
+
+            })
+            .flatMap(obj => {
+                return removeMultipleLines(this, pattern, count)
+                    .map(lines => ({lines: lines, id: obj.id}))
+            })
+            .flatMap(obj => {
+                return releaseLock(this, obj.id)
+                    .map(() => obj.lines)
+            })
+            .catch(e => {
+                console.error(e.stack || e);//
+                const force = !String(e.stack || e).match(/acquire lock timed out/);
+                return releaseLock(this, force);
+            })
+            // only take one, then we are done and should fire onComplete()
+            .take(1);
+
+        if (isConnect) {
+            $dequeue = $dequeue.publish();
+            $dequeue.connect();
+        }
+
+        return $dequeue;
+
+    }
+}
 

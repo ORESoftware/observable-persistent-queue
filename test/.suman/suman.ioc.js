@@ -20,7 +20,7 @@ module.exports = data => {
         },
 
         Queue: function(){
-            return require('../../lib/queue');
+            return require('../../lib/queue').Queue;
         }
 
 
