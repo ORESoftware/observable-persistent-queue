@@ -22,7 +22,6 @@ export = function(file: any, rgx: any){
         let count = 0;
 
         rl.on('close', function(){
-            rl.close();
             rl.removeListener('line', onLine);
             sub.next({count: count});
             sub.complete();

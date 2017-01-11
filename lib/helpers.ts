@@ -15,8 +15,9 @@ import colors = require('colors/safe');
 
 //project
 import sed = require('./sed');
-const debug = require('debug')('cmd-queue');
 import _countLines = require('./count-lines');
+const debug = require('debug')('cmd-queue');
+const a = require('./test');
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
