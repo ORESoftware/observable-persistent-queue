@@ -1,17 +1,36 @@
 'use strict';
-var colors = require("colors/safe");
-var debug = require('debug')('opq');
-var tail = require("./tail");
-module.exports = function (queue, push, clientEE) {
+
+//core
+import util = require('util');
+
+//npm
+import colors = require('colors/safe');
+const debug = require('debug')('opq');
+
+//project
+import tail = require('./tail');
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+export = (queue: any, push: any, clientEE: any) => {
+
     clientEE.emit('ready');
     queue.isReady = true;
-    var fp = queue.filepath;
-    tail(fp).on('data', function (data) {
+    const fp = queue.filepath;
+
+    //start tailing, only after we know that the file exists, etc.
+
+    tail(fp).on('data', (data:any) => {
+
         debug('\n', colors.cyan(' => raw data (well, trimmed) from tail => '), '\n', String(data).trim());
+
         data = String(data).split('\n')
-            .filter(function (ln) { return String(ln).trim().length > 0; })
-            .map(function (ln) { return String(ln).trim(); });
+            .filter(ln => String(ln).trim().length > 0)
+            .map(ln => String(ln).trim());
+
         data.map(function (d) {
+
             try {
                 return JSON.parse(d);
             }
@@ -19,10 +38,15 @@ module.exports = function (queue, push, clientEE) {
                 console.log('\n', colors.red(' => bad data from tail => '), '\n', d);
                 return '';
             }
+
         }).filter(function (d) {
+
             return String(d).trim().length > 0;
-        }).forEach(function (d) {
+
+        }).forEach(d => {
+
             push(d);
         });
+
     });
 };

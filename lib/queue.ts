@@ -72,7 +72,7 @@ const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-function Queue(obj) {
+function Queue(obj: any) {
 
     assert(typeof obj === 'object',
         ' => OPQ usage error => Please pass in an options object to the Queue constructor.');
@@ -167,7 +167,7 @@ function Queue(obj) {
                 return ifFileExistAndIsAllWhiteSpaceThenTruncate(this)
                     .map(() => obj)
             })
-            .flatMap(obj => {
+            .flatMap((obj:any)  => {
                 return releaseLock(this, obj.id);
 
             }).map(() => {
@@ -188,7 +188,7 @@ function Queue(obj) {
 Queue.prototype = Object.create(qProto);
 
 
-Queue.prototype.eqStream = function (pauser, opts) {
+Queue.prototype.eqStream = function (pauser: any, opts: any) {
 
     if (!(pauser instanceof Rx.Observable)) {
         opts = pauser || {};
@@ -214,11 +214,11 @@ Queue.prototype.eqStream = function (pauser, opts) {
                     return acquireLockRetry(this, obj)
                 });
         })
-        .flatMap(obj => {
+        .flatMap((obj:any) => {
             return removeOneLine(this)
                 .map(l => ({l: l, id: obj.id}));
         })
-        .flatMap(obj => {
+        .flatMap((obj:any) => {
             return releaseLock(this, obj.id)
                 .filter(() => obj.l)
                 .map(() => {
@@ -242,7 +242,7 @@ Queue.prototype.readAll = function () {
 };
 
 
-Queue.prototype.isNotEmpty = function (obs) {
+Queue.prototype.isNotEmpty = function (obs: any) {
 
     if (!obs) {
         obs = new Rx.Subject();
@@ -290,7 +290,7 @@ Queue.prototype.isNotEmpty = function (obs) {
 };
 
 
-Queue.prototype.isEmpty = function (obs) {
+Queue.prototype.isEmpty = function (obs: any) {
 
     if (!obs) {
         obs = new Rx.Subject();
@@ -340,7 +340,7 @@ Queue.prototype.isEmpty = function (obs) {
 };
 
 
-Queue.prototype.drain = function (obs, opts) {
+Queue.prototype.drain = function (obs: any, opts: any) {
 
     if (!(obs instanceof Rx.Observable)) {
         opts = obs || {};
@@ -413,7 +413,7 @@ Queue.prototype.drain = function (obs, opts) {
 };
 
 
-Queue.prototype.backpressure = function (val, fn) {
+Queue.prototype.backpressure = function (val: any, fn: any) {
     return backpressure(this, val, fn);
 };
 
@@ -429,7 +429,7 @@ Queue.prototype.getSize = function () {
 };
 
 
-Queue.prototype.enq = Queue.prototype.enqueue = function (lines, opts) {
+Queue.prototype.enq = Queue.prototype.enqueue = function (lines: any, opts: any) {
 
     opts = opts || {};
 
@@ -442,7 +442,7 @@ Queue.prototype.enq = Queue.prototype.enqueue = function (lines, opts) {
         assert(typeof this._priority === 'object', ' => You used the priority option to enqueue an item,' +
             ' but this queue was not initialized with priority data.');
 
-        let il = queue._priority.internalLevels;
+        let il = this._priority.internalLevels;
         const highestLevel = il[0];
         assert(Number.isInteger(priority),
             ' => Priority option must be an integer, between 1 and ' + highestLevel + ', inclusive.');
@@ -490,7 +490,7 @@ Queue.prototype.enq = Queue.prototype.enqueue = function (lines, opts) {
 };
 
 
-Queue.prototype.deq = Queue.prototype.dequeue = function (opts) {
+Queue.prototype.deq = Queue.prototype.dequeue = function (opts: any) {
 
     if (!opts || !opts.lines) {
 
@@ -542,7 +542,7 @@ Queue.prototype.deq = Queue.prototype.dequeue = function (opts) {
                 .map(() => obj.lines)
         })
         .catch(e => {
-            console.error(e.stack || e);
+            console.error(e.stack || e);//
             const force = !String(e.stack || e).match(/acquire lock timed out/);
             return releaseLock(this, force);
         })
@@ -559,4 +559,4 @@ Queue.prototype.deq = Queue.prototype.dequeue = function (opts) {
 };
 
 
-module.exports = Queue;
+export = Queue;

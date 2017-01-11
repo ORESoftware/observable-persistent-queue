@@ -4,6 +4,8 @@ const Test = suman.init(module, {
 });
 
 
+//TODO: write 300 enqueue items with random priority and make sure all are drained after 50 seconds or whatever
+
 const colors = require('colors/safe');
 
 Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userData) {
