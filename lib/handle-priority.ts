@@ -9,7 +9,6 @@ import util = require('util');
 
 //project
 
-
 ///////////////////////////////////////////////////////////////////////
 
 
@@ -20,7 +19,7 @@ const priorityMaxSearchMax = 300;
 ///////////////////////////////////////////////////////////////////////
 
 
-export default function _handlePriority(obj, queue){
+export = function _handlePriority(obj: any, queue: any){
 
     queue.priority = obj.priority;
 

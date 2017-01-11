@@ -11,9 +11,8 @@ Test.create(__filename, {}, function (assert, fs, path, userData, suite, Queue, 
     const id = suite.uniqueId;
     const pre = userData['suman.once.pre.js'];
     const p = pre['create-test-dir'];
-    console.error('pre =>', pre);
-    console.error('p =>', p);
-    console.error(' => id => ', id);
+
+    console.error('id => ', id);
 
     const q = new Queue({
         port: 7779,
@@ -47,18 +46,6 @@ Test.create(__filename, {}, function (assert, fs, path, userData, suite, Queue, 
 
     const count = 3;
 
-//     before('enqueues without explicit call to subscribe', t => {
-//
-//         const maps = [];
-//
-//         for (let i = 0; i < count; i++) {
-//             maps.push(q.enq('charlie'));
-//         }
-//
-//         return Rx.Observable.zip(...maps)
-// ;
-//     });
-
     before('enqueues without explicit call to subscribe', t => {
 
         const maps = [];
@@ -67,23 +54,35 @@ Test.create(__filename, {}, function (assert, fs, path, userData, suite, Queue, 
             maps.push(q.enq('charlie'));
         }
 
-        Rx.Observable.timer(100)
-        //this works!
-            .subscribe();
-
-        Rx.Observable.zip([
-            // rahhh
-        ])
-            .do(function () {   // <<<< here is the problem
-
-            });
+        return Rx.Observable.zip(...maps);
     });
+
+    // before('enqueues without explicit call to subscribe', t => {
+    //
+    //     const maps = [];
+    //
+    //     for (let i = 0; i < count; i++) {
+    //         maps.push(q.enq('charlie'));
+    //     }
+    //
+    //     Rx.Observable.timer(100)
+    //     //this works!
+    //         .subscribe();
+    //
+    //     Rx.Observable.zip([
+    //         // rahhh
+    //     ])
+    //         .do(function () {   // <<<< here is the problem
+    //
+    //         });
+    // });
 
 
     it('assert queue has a size of [count]', t => {
 
         return q.getSize()
             .do(function (data) {
+                console.log('count =>',data.count);
                 assert.equal(data.count, count, ' => Count is incorrect.');
             });
 

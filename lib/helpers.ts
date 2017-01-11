@@ -1,26 +1,50 @@
 'use strict';
-var util = require("util");
-var fs = require("fs");
-var assert = require("assert");
-var cp = require("child_process");
-var Rx = require("rxjs");
-var uuidV4 = require("uuid/v4");
-var colors = require("colors/safe");
-var sed = require("./sed");
-var debug = require('debug')('cmd-queue');
-var _countLines = require("./count-lines");
-var start = Date.now();
-var drainLocks = 0;
-var drainUnlocks = 0;
-var releaseLockCount = 0;
-var acquireLockCount = 0;
-var count = 0;
-function makeEEObservable(queue, ee, opts) {
+
+
+//core
+import util = require('util');
+import fs = require('fs');
+import path = require('path');
+import assert = require('assert');
+import cp = require('child_process');
+
+//npm
+import Rx = require('rxjs');
+import _ = require('lodash');
+import uuidV4 = require('uuid/v4');
+import colors = require('colors/safe');
+
+//project
+import sed = require('./sed');
+const debug = require('debug')('cmd-queue');
+import _countLines = require('./count-lines');
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+const start = Date.now();
+let drainLocks = 0;
+let drainUnlocks = 0;
+let releaseLockCount = 0;
+let acquireLockCount = 0;
+let count = 0;
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+// TODO: http://askubuntu.com/questions/509881/tail-reading-an-entire-file-and-then-following
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+export function makeEEObservable(queue: any, ee: any, opts: any) {
+
     opts = opts || {};
-    var isCallCompleted = opts.isCallCompleted;
-    var isPublish = opts.isPublish;
-    var obs = Rx.Observable.create(function (obs) {
+    const isCallCompleted = opts.isCallCompleted;
+    const isPublish = opts.isPublish;
+
+    let obs = Rx.Observable.create(obs => {
+
         if (queue.isReady) {
+            // this seemingly superfluous check prevents race conditions in the case that
+            // the "executor" function is not called synchronously
             obs.next();
             if (isCallCompleted) {
                 obs.complete();
@@ -28,7 +52,7 @@ function makeEEObservable(queue, ee, opts) {
         }
         else {
             ee.once('error', function (err) {
-                obs.error(err);
+                obs.error(err)
             });
             ee.once('ready', function () {
                 obs.next();
@@ -37,20 +61,25 @@ function makeEEObservable(queue, ee, opts) {
                 }
             });
         }
+
         return function () {
-        };
+            // console.log(' => ee observable disposed.');
+        }
     });
+
     if (isPublish) {
         obs = obs.publish().refCount();
     }
     return obs;
 }
-exports.makeEEObservable = makeEEObservable;
-function makeGenericObservable(fn, opts) {
+
+export function makeGenericObservable(fn: any, opts: any) {
+
     opts = opts || {};
-    var isCallCompleted = opts.isCallCompleted;
-    var isPublish = opts.isPublish;
-    var obs = Rx.Observable.create(function (obs) {
+    const isCallCompleted = opts.isCallCompleted;
+    const isPublish = opts.isPublish;
+
+    let obs = Rx.Observable.create(obs => {
         if (fn) {
             fn(function (err, val) {
                 if (err) {
@@ -61,6 +90,7 @@ function makeGenericObservable(fn, opts) {
                     if (isCallCompleted) {
                         obs.complete();
                     }
+
                 }
             });
         }
@@ -72,52 +102,69 @@ function makeGenericObservable(fn, opts) {
                 }
             });
         }
+
     });
+
     if (isPublish) {
         obs = obs.publish().refCount();
     }
     return obs;
 }
-exports.makeGenericObservable = makeGenericObservable;
-function countLines(queue, pattern) {
+
+
+export function countLines(queue: any, pattern: any) {
     return _countLines(queue.fp, pattern);
 }
-exports.countLines = countLines;
-function findFirstLine(queue, pattern) {
+
+
+export function findFirstLine(queue: any, pattern: any) {
+
     pattern = pattern || '\\S+';
-    var count = 1;
+
+    const count = 1;
+
     return sed(queue, pattern, 'false', count)
-        .map(function (data) {
-        return data[0];
-    });
+        .map(data => {
+            return data[0];
+        });
 }
-exports.findFirstLine = findFirstLine;
-function removeOneLine(queue, pattern) {
+
+
+export function removeOneLine(queue: any, pattern: any) {
+
     pattern = pattern || '\\S+';
-    var count = 1;
+
+    const count = 1;
+
     return sed(queue, pattern, 'true', count)
-        .map(function (data) {
-        if (data.length > 1) {
-            console.error(colors.red(' => OPQ Implementation Warning => ' +
-                'removeOneLine data had a length greater than 1.'));
-        }
-        return data[0];
-    });
+        .map(data => {
+            if (data.length > 1) {
+                console.error(colors.red(' => OPQ Implementation Warning => ' +
+                    'removeOneLine data had a length greater than 1.'));
+            }
+            return data[0];
+        });
 }
-exports.removeOneLine = removeOneLine;
-function removeMultipleLines(queue, pattern, count) {
+
+
+export function removeMultipleLines(queue: any, pattern: any, count: any) {
+
     return sed(queue, pattern, 'true', count)
-        .map(function (data) {
-        assert(Array.isArray(data), ' => Implementation error => data should be in an array format.');
-        return data;
-    });
+        .map(data => {
+            assert(Array.isArray(data),
+                ' => Implementation error => data should be in an array format.');
+            return data;
+        });
+
 }
-exports.removeMultipleLines = removeMultipleLines;
-function writeFile(queue, data) {
-    var filePath = queue.fp;
+
+export function writeFile(queue: any, data: any) {
+
+    const filePath = queue.fp;
     data = data || '';
-    return Rx.Observable.create(function (obs) {
-        fs.writeFile(filePath, data, function (err) {
+
+    return Rx.Observable.create(obs => {
+        fs.writeFile(filePath, data, err => {
             if (err) {
                 obs.error(err);
             }
@@ -126,18 +173,28 @@ function writeFile(queue, data) {
                 obs.complete();
             }
         });
+
         return function () {
-        };
+            // console.log('disposing appendFile()');
+        }
     });
+
 }
-exports.writeFile = writeFile;
-function appendFile(queue, lines, priority) {
-    var filePath = queue.fp;
+
+
+export function appendFile(queue: any, lines: any, priority: any) {
+
+    const filePath = queue.fp;
+
     assert(Number.isInteger(priority), ' => Implementation error => "priority" must be an integer.');
+
+    //ensure new line separation
     lines = lines.map(function (l) {
+
         assert.equal(typeof l, 'string');
         assert(!l.match(/:/), ' => Usage error => You cannot use colon characters in your queue messages, ' +
             'as OPQ uses colons to easily delineate JSON.');
+
         return JSON.stringify({
             dateCreated: new Date().toISOString(),
             pid: process.pid,
@@ -148,9 +205,11 @@ function appendFile(queue, lines, priority) {
             line: l
         });
     });
-    var data = lines.join('\n') + '\n';
-    return Rx.Observable.create(function (obs) {
-        fs.appendFile(filePath, data, { flag: 'a' }, function (err) {
+
+    const data = lines.join('\n') + '\n';
+
+    return Rx.Observable.create(obs => {
+        fs.appendFile(filePath, data, {flag: 'a'}, err => {
             if (err) {
                 obs.error(err);
             }
@@ -159,13 +218,16 @@ function appendFile(queue, lines, priority) {
                 obs.complete();
             }
         });
+
         return function () {
-        };
+            // console.log('disposing appendFile()');
+        }
     });
+
 }
-exports.appendFile = appendFile;
-function delayObservable(delay, isCompleted) {
-    return Rx.Observable.create(function (obs) {
+
+export function delayObservable(delay: any, isCompleted: any) {
+    return Rx.Observable.create(obs => {
         setTimeout(function () {
             obs.next();
             if (isCompleted) {
@@ -174,24 +236,32 @@ function delayObservable(delay, isCompleted) {
         }, delay || 100);
     });
 }
-exports.delayObservable = delayObservable;
-function ifFileExistAndIsAllWhiteSpaceThenTruncate(queue) {
+
+export function ifFileExistAndIsAllWhiteSpaceThenTruncate(queue: any) {
+
     return readFile(queue)
-        .flatMap(function (data) {
-        if (data) {
-            return makeGenericObservable(null, null);
-        }
-        else {
-            return writeFile(queue, null);
-        }
-    });
+        .flatMap(data => {
+            if (data) {
+                return makeGenericObservable(null, null);
+            }
+            else {
+                // if not data, then we truncate file
+                return writeFile(queue, null);
+            }
+        });
+
 }
-exports.ifFileExistAndIsAllWhiteSpaceThenTruncate = ifFileExistAndIsAllWhiteSpaceThenTruncate;
-function genericAppendFile(queue, data) {
-    var d = data || '';
-    var fp = queue.filepath;
-    return Rx.Observable.create(function (obs) {
-        fs.appendFile(fp, d, {}, function (err) {
+
+
+export function genericAppendFile(queue: any, data: any) {
+
+    const d = data || '';
+    const fp = queue.filepath;
+
+    return Rx.Observable.create(obs => {
+        // try to open file for reading and writing
+        // fs.writeFile(fp, d, {flag: 'w+'}, err => {
+        fs.appendFile(fp, d, {}, err => {
             if (err) {
                 console.log(' => OPQ append file error => ', err.stack);
                 obs.error(err);
@@ -201,27 +271,43 @@ function genericAppendFile(queue, data) {
                 obs.complete();
             }
         });
+
         return function () {
-        };
+            // console.log('disposing genericAppendFile()');
+        }
     });
 }
-exports.genericAppendFile = genericAppendFile;
-function acquireLockRetry(queue, obj) {
+
+export function acquireLockRetry(queue: any, obj: any) {
+
     if (!obj.error) {
         return makeGenericObservable(null, null)
-            .map(function () { return obj; });
+            .map(() => obj);
     }
+
     console.log('\n\n', colors.red(' => need to retry acquiring lock.'), '\n\n');
+
     return Rx.Observable.interval(3500)
-        .takeUntil(Rx.Observable.race(acquireLock(queue, obj.name)
-        .filter(function (obj) { return !obj.error; }), Rx.Observable.timer(2600)
-        .flatMap(function () {
-        return Rx.Observable.throw(' => Rx.Observable.throw => acquire lock timed out');
-    })));
+        .takeUntil(
+            // take until either the timeout occurs or we actually acquire the lock
+            Rx.Observable.race(
+                acquireLock(queue, obj.name)
+                    .filter(obj => !obj.error),
+
+                Rx.Observable.timer(2600)
+                    .flatMap(() => {
+                        return Rx.Observable.throw(' => Rx.Observable.throw => acquire lock timed out')
+                    })
+            )
+        )
+
 }
-exports.acquireLockRetry = acquireLockRetry;
-function backpressure(queue, val, fn) {
-    return Rx.Observable.create(function (sub) {
+
+
+export function backpressure(queue: any, val: any, fn: any) {
+
+    return Rx.Observable.create(sub => {
+
         fn.call(sub, function (err, ret) {
             if (err) {
                 sub.error(err);
@@ -233,14 +319,19 @@ function backpressure(queue, val, fn) {
                 });
             }
         });
+
         return function () {
-        };
+
+        }
     });
 }
-exports.backpressure = backpressure;
-function readFile$(queue) {
-    var fp = queue.filepath;
-    return Rx.Observable.create(function (obs) {
+
+
+export function readFile$(queue: any) {
+
+    const fp = queue.filepath;
+
+    return Rx.Observable.create(obs => {
         fs.readFile(fp, 'utf8', function (err, data) {
             if (err) {
                 console.log('errrror => ', err.stack);
@@ -250,29 +341,41 @@ function readFile$(queue) {
                 obs.next(data);
                 obs.complete();
             }
+
         });
         return function () {
-        };
+            // console.log('disposing readFile()');
+        }
     });
 }
-exports.readFile$ = readFile$;
-function readFile(queue) {
-    var fp = queue.filepath;
-    return Rx.Observable.create(function (obs) {
-        var n = cp.spawn('grep', ['-m', '1', '-E', '\\S+', fp]);
-        var data = '';
+
+
+export function readFile(queue: any) {
+
+    const fp = queue.filepath;
+
+    return Rx.Observable.create(obs => {
+
+        const n = cp.spawn('grep', ['-m', '1', '-E', '\\S+', fp]);
+
+        let data = '';
         n.stdout.setEncoding('utf8');
         n.stderr.setEncoding('utf8');
-        n.stdout.on('data', function (d) {
+
+        n.stdout.on('data', d => {
             data += String(d);
         });
+
         n.stderr.on('data', function (d) {
             console.error(colors.bgRed(' => grep error => '), String(d));
         });
+
         n.once('close', function (code) {
+
             n.stderr.removeAllListeners();
             n.stdout.removeAllListeners();
             n.removeAllListeners();
+
             if (code > 1) {
                 console.error(colors.red(' => grep exit code is greater than 0 => '), code, ' => stdout => ', '"' + data + '"');
                 obs.error({
@@ -280,98 +383,138 @@ function readFile(queue) {
                 });
             }
             else {
+
                 if (data) {
                     console.log('\n', colors.blue(' => data is as data do => '), '\n', data);
                 }
+
                 obs.next(data);
                 obs.complete();
+
             }
+
         });
+
         return function () {
-        };
+
+        }
+
     });
+
 }
-exports.readFile = readFile;
-function waitForClientCount(queue, opts) {
+
+
+export function waitForClientCount(queue: any, opts: any) {
+
     opts = opts || {};
-    var count = opts.count || 5;
-    var timeout = opts.timeout || 3000;
-    var index = opts.index;
+    const count = opts.count || 5;
+    const timeout = opts.timeout || 3000;
+
+    const index = opts.index;
+
     return queue.obsClient.bufferCount(count)
-        .flatMap(function (value) {
-        var first = value.shift();
-        var last = value[value.length - 1];
-        if (opts.index > 3 || (last.clientCount - first.clientCount < 2)) {
-            return Rx.Observable.timer(10);
-        }
-        else {
-            opts.index = opts.index || 0;
-            opts.index++;
-            return waitForClientCount.apply(null, [queue, opts]);
-        }
-    });
+        .flatMap(value => {
+
+            const first = value.shift();
+            const last = value[value.length - 1];
+
+            if (opts.index > 3 || (last.clientCount - first.clientCount < 2)) {
+                return Rx.Observable.timer(10)
+            }
+            else {
+                opts.index = opts.index || 0;
+                opts.index++;
+                return waitForClientCount.apply(null, [queue, opts]);
+            }
+
+        });
 }
-exports.waitForClientCount = waitForClientCount;
-function acquireLock(queue, name) {
-    var lock = queue.lock;
-    var client = queue.client;
+
+
+export function acquireLock(queue: any, name: any) {
+
+    const lock = queue.lock;
+    const client = queue.client;
+
     if (typeof name !== 'string') {
         throw new Error(' => OPQ implementation error => no name for mutex append.');
     }
-    return Rx.Observable.create(function (obs) {
-        client.lock(lock, { append: name }, function (err, unlock, id) {
+
+    return Rx.Observable.create(obs => {
+
+        client.lock(lock, {append: name}, function (err, unlock, id) {
             if (err) {
                 console.error('\n\n', ' => Error acquiring lock => \n', (err.stack || err));
             }
             else {
                 acquireLockCount++;
+
                 if (String(name).startsWith('<drain')) {
                     drainLocks++;
                     console.log('\n\n', 'drain locks/unlocks (locking) => ', drainLocks, drainUnlocks, '\n\n');
                 }
             }
+
+
             debug(util.inspect({
                 acquireLockCount: acquireLockCount,
                 releaseLockCount: releaseLockCount
             }));
+
             obs.next({
                 error: err ? (err.stack || err) : undefined,
                 id: id,
                 name: name
             });
+
             obs.complete();
+
         });
+
         return function () {
-        };
+            // console.log('disposing acquireLock()');
+        }
     });
 }
-exports.acquireLock = acquireLock;
-function releaseLock(queue, lockUuid) {
-    var client = queue.client;
+
+export function releaseLock(queue: any, lockUuid: any) {
+
+    const client = queue.client;
+
     if (!lockUuid) {
         console.error('\n\n', new Error('Cannot release lock without force or proper uuid.').stack, '\n\n');
         return Rx.Observable.throw('Cannot release lock without force or proper uuid.\n\n');
     }
+
+
     if (String(lockUuid).startsWith('<drain')) {
         drainUnlocks++;
         console.log('\n\n', 'drain locks/unlocks => ', drainLocks, drainUnlocks, '\n\n');
     }
-    return Rx.Observable.create(function (obs) {
-        var lock = queue.lock;
+
+    return Rx.Observable.create(obs => {
+
+        const lock = queue.lock;
+
         client.unlock(lock, lockUuid, function (err) {
+
             if (err) {
                 console.error('\n', ' => Release lock error => ', '\n', err.stack || err);
             }
             else {
                 releaseLockCount++;
             }
+
             obs.next({
                 error: err ? (err.stack || err) : undefined
             });
+
             obs.complete();
+
         });
+
         return function () {
-        };
+            // console.log('disposing releaseLock()');
+        }
     });
 }
-exports.releaseLock = releaseLock;

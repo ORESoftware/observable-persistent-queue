@@ -4,6 +4,8 @@ const Test = suman.init(module, {
 });
 
 
+//TODO: write 300 enqueue items with random priority and make sure all are drained after 50 seconds or whatever
+
 const colors = require('colors/safe');
 
 Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userData) {
@@ -12,9 +14,10 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
     const pre = userData['suman.once.pre.js'];
     const p = pre['create-test-dir'];
 
+    console.error('id => ', id);
 
     const q = new Queue({
-        port: 8888,
+        port: 8887,
         fp: path.resolve(p + '/spaceships-' + id + '.txt'),
         priority: {
             first: 20,
@@ -92,7 +95,7 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
     });
 
 
-    this.it.cb('drains queue', {timeout: 6000}, t => {
+    this.it.cb('drains queue (priority max)', {timeout: 6000}, t => {
 
         const s = Date.now();
         q.drain({backpressure: true})

@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/ORESoftware/observable-persistent-queue#readme",
   "dependencies": {
+    "colors": "^1.1.2",
     "debug": "^2.5.2",
     "live-mutex": "latest",
     "lodash": "^4.17.2",
@@ -37,6 +38,7 @@
     "uuid": "^3.0.1"
   },
   "devDependencies": {
+    "@types/core-js": "^0.9.35",
     "@types/node": "^7.0.0",
     "async": "^2.1.4",
     "lockfile": "^1.0.3",

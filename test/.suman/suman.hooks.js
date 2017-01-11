@@ -15,15 +15,7 @@ let id = 0;
 
 module.exports = (suite) => {
 
-    console.error('is running before');
-    console.error('suite.fileName => ', suite.fileName);
-
-    const fff = fs.statSync(suite.fileName);
-
-    console.error('fff => ', util.inspect(fff));
-    console.error('suite.fileName => ', suite.fileName);
-
-    suite.uniqueId = fff.ino;
+    suite.uniqueId = fs.statSync(suite.fileName).ino;
 
     suite.before.cb(h => {
 
