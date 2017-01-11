@@ -1,4 +1,4 @@
-'use striiiict';
+'use strict';
 
 //core
 import util = require('util');

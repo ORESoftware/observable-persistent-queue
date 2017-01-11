@@ -10,14 +10,9 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
 
     const id = suite.uniqueId;
     const pre = userData['suman.once.pre.js'];
-
-    console.error('pre =>', pre);
-
-
     const p = pre['create-test-dir'];
 
-    console.error('p =>', p);
-    console.error(' => id => ',id);
+    console.error('id => ', id);
 
     const q = new Queue({
         port: 8888,
@@ -98,7 +93,7 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
     });
 
 
-    this.it.cb('drains queue', {timeout: 6000}, t => {
+    this.it.cb('drains queue (priority)', {timeout: 6000}, t => {
 
         const s = Date.now();
         q.drain({backpressure: true})

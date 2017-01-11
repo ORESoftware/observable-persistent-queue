@@ -9,12 +9,9 @@ Test.create('backpressure',
 
         const id = suite.uniqueId;
         const pre = userData['suman.once.pre.js'];
-
-        console.error('pre =>', pre);
         const p = pre['create-test-dir'];
 
-        console.error('p =>', p);
-        console.error(' => id => ',id);
+        console.error('id => ', id);
 
         const q = new Queue({
             port: 3500,

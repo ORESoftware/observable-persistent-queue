@@ -16,7 +16,6 @@ const debug = require('debug')('cmd-queue');
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-
 export = function (queue: any, pattern: any, isReplace: any, $count: any) {
 
     const file = queue.filepath;
@@ -25,7 +24,7 @@ export = function (queue: any, pattern: any, isReplace: any, $count: any) {
     //force boolean to string...s
     isReplace = String(isReplace);
 
-    var priority = 0;
+    let priority = 0;
 
     if (queue.priority) {
 
@@ -36,7 +35,7 @@ export = function (queue: any, pattern: any, isReplace: any, $count: any) {
         // console.log('priority cycle index => ', ind);
         // console.log(' => Current cycle-number => ', cycleNumber);
 
-        var accumulatedValue = 0;
+        let accumulatedValue = 0;
 
         queue._priority.levels.every(function (obj) {
 

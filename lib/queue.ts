@@ -79,8 +79,6 @@ function Queue(obj: any) {
     const fp = this.fp = this.filepath = obj.filepath || obj.filePath || obj.fp;
     const port = this.port = obj.port;
 
-    console.error(colors.red('file fucking path => '), fp);
-
     assert(String(fp).length > 0, ' => Please pass the filepath of the queue.');
     assert(Number.isInteger(port), ' => Please pass in an integer for the port.');
 
@@ -120,7 +118,7 @@ function Queue(obj: any) {
 
     this.isReady = false;
     this.lockUuid = null;
-    var callable = true;
+    let callable = true;
 
     let obsClient = this.obsClient = new Rx.Subject();
     const clientEE = new EE();

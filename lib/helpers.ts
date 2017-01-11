@@ -17,14 +17,16 @@ import colors = require('colors/safe');
 //project
 import sed = require('./sed');
 const debug = require('debug')('cmd-queue');
-import countLines = require('./count-lines');
+import _countLines = require('./count-lines');
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 const start = Date.now();
-var releaseLockCount = 0;
-var acquireLockCount = 0;
-var count = 0;
+let drainLocks = 0;
+let drainUnlocks = 0;
+let releaseLockCount = 0;
+let acquireLockCount = 0;
+let count = 0;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,8 +34,7 @@ var count = 0;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-
-exports.makeEEObservable = function _makeEEObservable(queue: any, ee: any, opts: any) {
+export function makeEEObservable(queue: any, ee: any, opts: any) {
 
     opts = opts || {};
     const isCallCompleted = opts.isCallCompleted;
@@ -70,10 +71,9 @@ exports.makeEEObservable = function _makeEEObservable(queue: any, ee: any, opts:
         obs = obs.publish().refCount();
     }
     return obs;
-};
+}
 
-
-const makeGenericObservable = exports.makeGenericObservable = function _makeGenericObservable(fn: any, opts: any) {
+export function makeGenericObservable(fn: any, opts: any) {
 
     opts = opts || {};
     const isCallCompleted = opts.isCallCompleted;
@@ -109,15 +109,15 @@ const makeGenericObservable = exports.makeGenericObservable = function _makeGene
         obs = obs.publish().refCount();
     }
     return obs;
-};
+}
 
 
-exports.countLines = function _countMatchingLines(queue: any, pattern: any) {
-    return countLines(queue.fp, pattern);
-};
+export function countLines(queue: any, pattern: any) {
+    return _countLines(queue.fp, pattern);
+}
 
 
-exports.findFirstLine = function _findFirstLine(queue: any, pattern: any) {
+export function findFirstLine(queue: any, pattern: any) {
 
     pattern = pattern || '\\S+';
 
@@ -127,11 +127,10 @@ exports.findFirstLine = function _findFirstLine(queue: any, pattern: any) {
         .map(data => {
             return data[0];
         });
+}
 
-};
 
-
-exports.removeOneLine = function _removeOneLine(queue: any, pattern: any) {
+export function removeOneLine(queue: any, pattern: any) {
 
     pattern = pattern || '\\S+';
 
@@ -140,25 +139,26 @@ exports.removeOneLine = function _removeOneLine(queue: any, pattern: any) {
     return sed(queue, pattern, 'true', count)
         .map(data => {
             if (data.length > 1) {
-                console.error(colors.red(' => Warning => removeOneLine data had a length greater than 1.'));
+                console.error(colors.red(' => OPQ Implementation Warning => ' +
+                    'removeOneLine data had a length greater than 1.'));
             }
             return data[0];
         });
+}
 
-};
 
-
-exports.removeMultipleLines = function _removeMultipleLines(queue: any, pattern: any, count: any) {
+export function removeMultipleLines(queue: any, pattern: any, count: any) {
 
     return sed(queue, pattern, 'true', count)
         .map(data => {
-            assert(Array.isArray(data), ' => Implementation error => data should be in an array format.');
+            assert(Array.isArray(data),
+                ' => Implementation error => data should be in an array format.');
             return data;
         });
 
-};
+}
 
-const writeFile = exports.writeFile = function _writeFile(queue: any, data: any) {
+export function writeFile(queue: any, data: any) {
 
     const filePath = queue.fp;
     data = data || '';
@@ -179,10 +179,10 @@ const writeFile = exports.writeFile = function _writeFile(queue: any, data: any)
         }
     });
 
-};
+}
 
 
-exports.appendFile = function _appendFile(queue: any, lines: any, priority: any) {
+export function appendFile(queue: any, lines: any, priority: any) {
 
     const filePath = queue.fp;
 
@@ -224,9 +224,9 @@ exports.appendFile = function _appendFile(queue: any, lines: any, priority: any)
         }
     });
 
-};
+}
 
-exports.delayObservable = function (delay: any, isCompleted: any) {
+export function delayObservable(delay: any, isCompleted: any) {
     return Rx.Observable.create(obs => {
         setTimeout(function () {
             obs.next();
@@ -235,14 +235,14 @@ exports.delayObservable = function (delay: any, isCompleted: any) {
             }
         }, delay || 100);
     });
-};
+}
 
-exports.ifFileExistAndIsAllWhiteSpaceThenTruncate = function (queue: any) {
+export function ifFileExistAndIsAllWhiteSpaceThenTruncate(queue: any) {
 
     return readFile(queue)
         .flatMap(data => {
             if (data) {
-                return makeGenericObservable(null,null);
+                return makeGenericObservable(null, null);
             }
             else {
                 // if not data, then we truncate file
@@ -250,20 +250,10 @@ exports.ifFileExistAndIsAllWhiteSpaceThenTruncate = function (queue: any) {
             }
         });
 
-};
-
-exports.obviousObservable = function _obviousObservable() {
-
-    return Rx.Observable.create(obs => {
-        process.nextTick(function () {
-            obs.next();
-        });
-    });
-
-};
+}
 
 
-exports.genericAppendFile = function _genericAppendFile(queue: any, data: any) {
+export function genericAppendFile(queue: any, data: any) {
 
     const d = data || '';
     const fp = queue.filepath;
@@ -286,10 +276,9 @@ exports.genericAppendFile = function _genericAppendFile(queue: any, data: any) {
             // console.log('disposing genericAppendFile()');
         }
     });
+}
 
-};
-
-exports.acquireLockRetry = function _acquireLockRetry(queue: any, obj: any) {
+export function acquireLockRetry(queue: any, obj: any) {
 
     if (!obj.error) {
         return makeGenericObservable(null, null)
@@ -312,11 +301,10 @@ exports.acquireLockRetry = function _acquireLockRetry(queue: any, obj: any) {
             )
         )
 
+}
 
-};
 
-
-exports.backpressure = function (queue: any, val: any, fn: any) {
+export function backpressure(queue: any, val: any, fn: any) {
 
     return Rx.Observable.create(sub => {
 
@@ -336,49 +324,10 @@ exports.backpressure = function (queue: any, val: any, fn: any) {
 
         }
     });
-};
+}
 
 
-// exports.backpressure = function (queue, source, fn) {
-//
-//     return Rx.Observable.create(function (sub) {
-//
-//         const source = this;
-//
-//         const obs = Rx.Observable.create(sub => {
-//
-//             //return subscription
-//             return source.subscribe(val => {
-//                     // important: catch errors from user-provided callbacks
-//
-//                     fn.call(source, val, function (err, val) {
-//                         if (err) {
-//                             sub.error(err);
-//                         }
-//                         else {
-//                             sub.next(val);
-//                         }
-//
-//                     });
-//                 },
-//                 // be sure to handle errors and completions as appropriate and
-//                 // send them along
-//                 err => sub.error(err),
-//                 () => sub.complete());
-//
-//         });
-//
-//         return obs.subscribe(
-//             sub.next.bind(sub),
-//             sub.error.bind(sub),
-//             sub.complete.bind(sub)
-//         );
-//     });
-//
-// };
-
-
-const readFile$ = exports.readFile$ = function _readFile(queue: any) {
+export function readFile$(queue: any) {
 
     const fp = queue.filepath;
 
@@ -398,10 +347,10 @@ const readFile$ = exports.readFile$ = function _readFile(queue: any) {
             // console.log('disposing readFile()');
         }
     });
-};
+}
 
 
-const readFile = exports.readFile = function (queue: any) {
+export function readFile(queue: any) {
 
     const fp = queue.filepath;
 
@@ -409,7 +358,7 @@ const readFile = exports.readFile = function (queue: any) {
 
         const n = cp.spawn('grep', ['-m', '1', '-E', '\\S+', fp]);
 
-        var data = '';
+        let data = '';
         n.stdout.setEncoding('utf8');
         n.stderr.setEncoding('utf8');
 
@@ -452,10 +401,10 @@ const readFile = exports.readFile = function (queue: any) {
 
     });
 
-};
+}
 
 
-exports.waitForClientCount = function _waitForClientCount(queue: any, opts: any) {
+export function waitForClientCount(queue: any, opts: any) {
 
     opts = opts || {};
     const count = opts.count || 5;
@@ -475,18 +424,14 @@ exports.waitForClientCount = function _waitForClientCount(queue: any, opts: any)
             else {
                 opts.index = opts.index || 0;
                 opts.index++;
-                return _waitForClientCount.apply(null, [queue, opts]);
+                return waitForClientCount.apply(null, [queue, opts]);
             }
 
         });
-};
+}
 
 
-var drainLocks = 0;
-var drainUnlocks = 0;
-
-
-const acquireLock = exports.acquireLock = function _acquireLock(queue: any, name: any) {
+export function acquireLock(queue: any, name: any) {
 
     const lock = queue.lock;
     const client = queue.client;
@@ -530,9 +475,9 @@ const acquireLock = exports.acquireLock = function _acquireLock(queue: any, name
             // console.log('disposing acquireLock()');
         }
     });
-};
+}
 
-exports.releaseLock = function _releaseLock(queue: any, lockUuid: any) {
+export function releaseLock(queue: any, lockUuid: any) {
 
     const client = queue.client;
 
@@ -572,4 +517,4 @@ exports.releaseLock = function _releaseLock(queue: any, lockUuid: any) {
             // console.log('disposing releaseLock()');
         }
     });
-};
+}
