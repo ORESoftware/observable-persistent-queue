@@ -6,5 +6,4 @@
 # if you don't have tsc at the command line, you will need to install TypeScript
 
 cd $(dirname $0) &&
-rm -rf dist &&
-tsc # build with typescript
+tsc --watch # build with typescript, and watch for changes + transpile incrementally
