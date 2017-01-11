@@ -1,6 +1,5 @@
 'use strict';
 
-
 //core
 import util = require('util');
 import fs = require('fs');

@@ -2,9 +2,9 @@
 
 
 import Rx = require('rxjs');
-
 const proto = <any> Rx.Observable.prototype;
 
+///////////////////////////////////////////////
 
 proto.backpressure = function(fn){
 

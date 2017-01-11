@@ -10,7 +10,6 @@ const debug = require('debug')('opq');
 //project
 import tail = require('./tail');
 
-
 //////////////////////////////////////////////////////////////////////////////
 
 export = (queue: any, push: any, clientEE: any) => {
