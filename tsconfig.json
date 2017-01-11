@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["node"],
+    "types": ["node","lodash"],
     "compileOnSave": true,
     "target": "es2017",
     "module": "commonjs",

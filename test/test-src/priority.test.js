@@ -12,8 +12,6 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
     const pre = userData['suman.once.pre.js'];
     const p = pre['create-test-dir'];
 
-    console.error('id => ', id);
-
     const q = new Queue({
         port: 8888,
         fp: path.resolve(p + '/spaceships-' + id + '.txt'),
@@ -67,7 +65,9 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
             .concatAll()
             .subscribe(
                 function (v) {
-                    console.log(colors.yellow.bold('next => '), v);
+                    if(v.error){
+                        console.log(colors.yellow.bold('next => '), v);
+                    }
                 },
                 function (e) {
                     console.error(e);

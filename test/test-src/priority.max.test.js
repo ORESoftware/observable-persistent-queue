@@ -8,13 +8,13 @@ const Test = suman.init(module, {
 
 const colors = require('colors/safe');
 
-Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userData) {
+Test.create(__filename, {},
+
+    function (assert, fs, path, Queue, Rx, suite, userData, before, it, after) {
 
     const id = suite.uniqueId;
     const pre = userData['suman.once.pre.js'];
     const p = pre['create-test-dir'];
-
-    console.error('id => ', id);
 
     const q = new Queue({
         port: 8887,
@@ -38,11 +38,11 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
         }
     });
 
-    this.before(h => {
+    before(h => {
         return q.init();
     });
 
-    this.before.cb({timeout: 5000}, h => {
+    before.cb({timeout: 5000}, h => {
 
         q.getClient().requestLockInfo(q.getLock(), function (err, data) {
 
@@ -57,7 +57,7 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
 
     });
 
-    this.before.cb({timeout: 5000}, h => {
+    before.cb({timeout: 5000}, h => {
 
         Rx.Observable.interval(10)
             .take(300)
@@ -69,7 +69,10 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
             .concatAll()
             .subscribe(
                 function (v) {
-                    console.log(colors.yellow.bold('next => '), v);
+                    if (v.error) {
+                        console.log(colors.yellow.bold('next => '), v);
+                    }
+
                 },
                 function (e) {
                     console.error(e);
@@ -95,16 +98,20 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
     });
 
 
-    this.it.cb('drains queue (priority max)', {timeout: 6000}, t => {
+    it.cb('drains queue (priority max)', {timeout: 8000}, t => {
 
         const s = Date.now();
         q.drain({backpressure: true})
-            .backpressure(function (data,cb) {
-                setTimeout(cb, 10);
+            .backpressure(function (data, cb) {
+                setTimeout(function () {
+                    cb(null, {error: null})
+                }, 10);
             })
             .subscribe(
                 function (v) {
-                    console.log(colors.yellow.bold(' next enqueue item => '), '\n', v);
+                    if(v.error){
+                        console.log(colors.yellow.bold(' next enqueue item => '), '\n', v);
+                    }
                 },
                 t.fail,
                 function () {
@@ -129,8 +136,7 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
     });
 
 
-    this.after.cb({timeout: 2000}, h => {
-
+    after.cb({timeout: 2000}, h => {
 
         q.getClient().requestLockInfo(q.getLock(), function (err, data) {
 
@@ -142,11 +148,12 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
 
             q.getSize().subscribe(
                 function (v) {
-                    console.log('v => ', v);
-                    assert.equal(v.count,0, ' => Count is not correct.');
+                    console.log(' => v => ', v);
+                    assert.equal(v.count, 0, ' => Count is not correct.');
                 },
                 function (e) {
                     console.error(e);
+                    h.fail(e);
                 },
                 function () {
 

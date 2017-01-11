@@ -196,17 +196,15 @@ export function appendFile(queue: any, lines: any, priority: any) {
             'as OPQ uses colons to easily delineate JSON.');
 
         return JSON.stringify({
+            line: l,
             dateCreated: new Date().toISOString(),
             pid: process.pid,
-            count: count++,
             uid: uuidV4(),
             priority: priority,
-            isRead: false,
-            line: l
         });
     });
 
-    const data = lines.join('\n') + '\n';
+    const data = '\n' + lines.join('\n') + '\n';
 
     return Rx.Observable.create(obs => {
         fs.appendFile(filePath, data, {flag: 'a'}, err => {
@@ -451,7 +449,7 @@ export function acquireLock(queue: any, name: any) {
 
                 if (String(name).startsWith('<drain')) {
                     drainLocks++;
-                    console.log('\n\n', 'drain locks/unlocks (locking) => ', drainLocks, drainUnlocks, '\n\n');
+                    debug('\n\n', 'drain locks/unlocks (locking) => ', drainLocks, drainUnlocks, '\n\n');
                 }
             }
 
@@ -486,10 +484,9 @@ export function releaseLock(queue: any, lockUuid: any) {
         return Rx.Observable.throw('Cannot release lock without force or proper uuid.\n\n');
     }
 
-
     if (String(lockUuid).startsWith('<drain')) {
         drainUnlocks++;
-        console.log('\n\n', 'drain locks/unlocks => ', drainLocks, drainUnlocks, '\n\n');
+        debug('\n\n', 'drain locks/unlocks => ', drainLocks, drainUnlocks, '\n\n');
     }
 
     return Rx.Observable.create(obs => {

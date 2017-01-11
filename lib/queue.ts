@@ -48,22 +48,17 @@ const start = Date.now();
 
 const {
 
-    backpressure,
     countLines,
     acquireLock,
     releaseLock,
     genericAppendFile,
-    readFile,
     makeEEObservable,
-    writeFile,
-    delayObservable,
     removeOneLine,
     removeMultipleLines,
     appendFile,
     acquireLockRetry,
     makeGenericObservable,
     ifFileExistAndIsAllWhiteSpaceThenTruncate,
-    waitForClientCount,
     findFirstLine
 
 } = require('./helpers');
@@ -71,118 +66,132 @@ const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-function Queue(obj: any) {
+export class Queue {
 
-    assert(typeof obj === 'object',
-        ' => OPQ usage error => Please pass in an options object to the Queue constructor.');
-    const fp = this.fp = this.filepath = obj.filepath || obj.filePath || obj.fp;
-    const port = this.port = obj.port;
+    filepath:string;
+    fp:string;
+    dateCreated: Date;
+    port: number;
+    isEmptyStream: Rx.Subject;
+    obsDequeue: Rx.Subject;
+    obsEnqueue: Rx.Subject;
+    obsClient: Rx.Subject;
+    lock: string;
+    queueStream: Rx.Observable;
+    init: Function;
+    isReady: boolean;
+    client: Client;
 
-    assert(String(fp).length > 0, ' => Please pass the filepath of the queue.');
-    assert(Number.isInteger(port), ' => Please pass in an integer for the port.');
+    constructor(obj: any) {
 
-    const lck = this.lock = ['[OPQ]>', uuidV4()].join('');
+        assert(typeof obj === 'object',
+            ' => OPQ usage error => Please pass in an options object to the Queue constructor.');
+        const fp = this.fp = this.filepath = obj.filepath || obj.filePath || obj.fp;
+        const port = this.port = obj.port;
 
-    this.dateCreated = new Date();
+        assert(String(fp).length > 0, ' => Please pass the filepath of the queue.');
+        assert(Number.isInteger(port), ' => Please pass in an integer for the port.');
 
-    if (obj.priority) {
-        handlePriority(obj, this);
-    }
+        const lck = this.lock = ['[OPQ]>', uuidV4()].join('');
 
-    this.isEmptyStream = new Rx.Subject();
-    this.obsDequeue = new Rx.Subject();
-    let index = 0;
+        this.dateCreated = new Date();
 
-    let obsEnqueue = this.obsEnqueue = new Rx.Subject();
-
-    this.queueStream = Rx.Observable.create(obs => {
-
-        const push = Rx.Subscriber.create(v => {
-            if ((index % obsEnqueue.observers.length) === obsEnqueue.observers.indexOf(push)) {
-                obs.next(v);
-            }
-        });
-
-        return obsEnqueue.subscribe(push);
-    });
-
-    const push = v => {
-        obsEnqueue.next(v);
-        index++;
-    };
-
-    process.once('exit', () => {
-        this.close();
-    });
-
-    this.isReady = false;
-    this.lockUuid = null;
-    let callable = true;
-
-    let obsClient = this.obsClient = new Rx.Subject();
-    const clientEE = new EE();
-
-    clientEE.setMaxListeners(200);
-
-    function onClientConnectionChange(clientCount) {
-        // console.log('client count => ', clientCount);
-        obsClient.next({
-            time: Date.now(),
-            clientCount: clientCount
-        });
-    }
-
-    // init both creates the queue file if it does not exist, and finds/initializes the live-mutex
-    this.init = (isPublish) => {
-
-        if (this.isReady) {
-            return makeGenericObservable(null, {isPublish: isPublish});
+        if (obj.priority) {
+            handlePriority(obj, this);
         }
 
-        if (!callable) {
-            //if init() has already been called but this queue instance is not ready yet
-            return makeEEObservable(this, clientEE, {isPublish: isPublish});
-        }
+        this.isEmptyStream = new Rx.Subject();
+        this.obsDequeue = new Rx.Subject();
+        let index = 0;
 
-        callable = false;
+        let obsEnqueue = this.obsEnqueue = new Rx.Subject();
 
-        const promise = lmUtils.conditionallyLaunchSocketServer({port: port});
+        this.queueStream = Rx.Observable.create(obs => {
 
-        return Rx.Observable.fromPromise(promise)
-            .flatMap(() => {
-                this.client = new Client({key: lck, port: port, listener: onClientConnectionChange});
-                return acquireLock(this, 'init')
-                    .flatMap(obj => {
-                        return acquireLockRetry(this, obj)
-                    });
-            })
-            .flatMap(obj => {
-                return genericAppendFile(this, '')
-                    .map(() => obj)
-            })
-            .flatMap(obj => {
-                return ifFileExistAndIsAllWhiteSpaceThenTruncate(this)
-                    .map(() => obj)
-            })
-            .flatMap((obj:any)  => {
-                return releaseLock(this, obj.id);
-
-            }).map(() => {
-                // currently just returns undefined
-                return startTail(this, push, clientEE);
-            })
-            .take(1)
-            .catch(e => {
-                console.error(e.stack || e);
-                const force = !String(e.stack || e).match(/acquire lock timed out/);
-                return releaseLock(this, force);
-
+            const push = Rx.Subscriber.create(v => {
+                if ((index % obsEnqueue.observers.length) === obsEnqueue.observers.indexOf(push)) {
+                    obs.next(v);
+                }
             });
-    };
-}
+
+            return obsEnqueue.subscribe(push);
+        });
+
+        const push = v => {
+            obsEnqueue.next(v);
+            index++;
+        };
+
+        process.once('exit', () => {
+            this.close();
+        });
+
+        this.isReady = false;
+        let callable = true;
+
+        let obsClient = this.obsClient = new Rx.Subject();
+        const clientEE = new EE();
+
+        clientEE.setMaxListeners(200);
+
+        function onClientConnectionChange(clientCount) {
+            // console.log('client count => ', clientCount);
+            obsClient.next({
+                time: Date.now(),
+                clientCount: clientCount
+            });
+        }
+
+        // init both creates the queue file if it does not exist, and finds/initializes the live-mutex
+        this.init = (isPublish) => {
+
+            if (this.isReady) {
+                return makeGenericObservable(null, {isPublish: isPublish});
+            }
+
+            if (!callable) {
+                //if init() has already been called but this queue instance is not ready yet
+                return makeEEObservable(this, clientEE, {isPublish: isPublish});
+            }
+
+            callable = false;
+
+            const promise = lmUtils.conditionallyLaunchSocketServer({port: port});
+
+            return Rx.Observable.fromPromise(promise)
+                .flatMap(() => {
+                    this.client = new Client({key: lck, port: port, listener: onClientConnectionChange});
+                    return acquireLock(this, 'init')
+                        .flatMap(obj => {
+                            return acquireLockRetry(this, obj)
+                        });
+                })
+                .flatMap(obj => {
+                    return genericAppendFile(this, '')
+                        .map(() => obj)
+                })
+                .flatMap(obj => {
+                    return ifFileExistAndIsAllWhiteSpaceThenTruncate(this)
+                        .map(() => obj)
+                })
+                .flatMap((obj: any) => {
+                    return releaseLock(this, obj.id);
+
+                }).map(() => {
+                    // currently just returns undefined
+                    return startTail(this, push, clientEE);
+                })
+                .take(1)
+                .catch(e => {
+                    console.error(e.stack || e);
+                    const force = !String(e.stack || e).match(/acquire lock timed out/);
+                    return releaseLock(this, force);
+
+                });
+        };
+    }
 
 
-Queue.prototype = Object.create(qProto);
 
 
 Queue.prototype.eqStream = function (pauser: any, opts: any) {
@@ -555,5 +564,3 @@ Queue.prototype.deq = Queue.prototype.dequeue = function (opts: any) {
 
 };
 
-
-export = Queue;
