@@ -37,6 +37,7 @@
     "uuid": "^3.0.1"
   },
   "devDependencies": {
+    "@types/node": "^7.0.0",
     "async": "^2.1.4",
     "lockfile": "^1.0.3",
     "mkdirp": "^0.5.1",

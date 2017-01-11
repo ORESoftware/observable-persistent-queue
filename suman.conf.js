@@ -6,8 +6,8 @@
 const os = require('os');
 const path = require('path');
 const numOfCPUs = os.cpus().length || 1;
-// const pckgDotJson = require(path.resolve(__dirname, 'package.json'));
 
+/////////////////////////////////////////////////
 
 module.exports = Object.freeze({
 

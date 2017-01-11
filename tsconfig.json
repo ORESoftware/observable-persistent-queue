@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["node"],
     "compileOnSave": true,
     "target": "es5",
     "noImplicitAny": false,
