@@ -59,11 +59,11 @@ export interface IPriority {
 
 export interface IPriorityInternal {
 
-    first?: number;
-    totalPriorityCycles?: number;
-    priorityCycleIndex?: number;
-    internalLevels?: Array<number>;
-    levels?: Array<IPriorityLevel>;
+    first: number | null;
+    totalPriorityCycles: number | null;
+    priorityCycleIndex: number | null;
+    internalLevels: Array<number> | null;
+    levels: Array<IPriorityLevel> | null;
 
 }
 

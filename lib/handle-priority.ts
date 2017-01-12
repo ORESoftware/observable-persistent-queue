@@ -33,7 +33,7 @@ export = function (obj: any, q: Queue) {
     let il: Array<number> = q._priority.internalLevels = [];
 
     q._priority.levels = q.priority.levels.sort((a: IPriorityLevel, b: IPriorityLevel) => {
-        return b.level - a.level;
+        return b.level > a.level;
     });
 
     // TODO: this should be renamed from "first" to "priority_max_search"

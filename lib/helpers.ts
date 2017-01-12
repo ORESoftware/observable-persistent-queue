@@ -218,7 +218,9 @@ export function appendFile(q: QProto, $lines: Array<string> | string, priority: 
         });
     });
 
-    const data = '\n' + lines.join('\n') + '\n';
+    // const data = '\n' + lines.join('\n') + '\n';
+
+    const data = lines.join('\n') + '\n';
 
     return Observable.create(obs => {
         fs.appendFile(filePath, data, {flag: 'a'}, err => {

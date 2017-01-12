@@ -1,5 +1,7 @@
 'use strict';
 
+//core
+import util = require('util');
 
 import Rx = require('rxjs');
 const proto = <any> Rx.Observable.prototype;
@@ -19,7 +21,8 @@ proto.backpressure = function(fn){
                       sub.error(err);
                   }
                   else{
-                      val.cb();
+                      console.log(util.inspect(val));
+                      process.nextTick(val.cb.bind(val));
                       sub.next(data);
                   }
               });

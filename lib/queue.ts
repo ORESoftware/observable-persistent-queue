@@ -338,13 +338,10 @@ export class Queue extends QProto {
     }
 
 
-    drain(obs: Subject<any> | null, opts?: IDrainOpts): Observable<any> {
+    drain(obs?: Subject<any>, opts?: IDrainOpts): Observable<any> {
 
         if (!(obs instanceof Subject)) {
-            if (obs) {
-                console.error(' => First argument to drain() should be an RxJS Subject instance.');
-            }
-            opts = opts || {};
+            opts = obs || {};
             obs = new Subject<any>();
         }
 
@@ -366,7 +363,8 @@ export class Queue extends QProto {
         const emptyObs = new Rx.Subject();
 
         let $obs = obs
-            .takeUntil(this.isNotEmpty())
+            // .takeUntil(this.isNotEmpty())
+            // .takeWhile(this.isNotEmpty())
             // .startWith(0)
             .flatMap(() => {
                 return this.init();
