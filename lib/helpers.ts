@@ -13,13 +13,24 @@ import Rx = require('rxjs');
 import _ = require('lodash');
 import uuidV4 = require('uuid/v4');
 import colors = require('colors/safe');
+import {Observable} from 'rxjs';
 
 //project
 import sed = require('./sed');
 import _countLines = require('./count-lines');
 import {Queue} from "./queue";
+import {QProto} from "./queue-proto";
 const debug = require('debug')('cmd-queue');
 const a = require('./test');
+
+import {
+
+    IBackpressureObj,
+    IGenericObservable,
+    IClientCount
+
+}
+    from "./object-interfaces";
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -37,15 +48,15 @@ let count = 0;
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 
-export function makeEEObservable(queue: Queue, ee: EE, opts: Object) {
+export function makeEEObservable(q: Queue, ee: EE, opts: IGenericObservable): Observable<any> {
 
     opts = opts || {};
     const isCallCompleted = opts.isCallCompleted;
     const isPublish = opts.isPublish;
 
-    let obs = Rx.Observable.create(obs => {
+    let obs = Observable.create(obs => {
 
-        if (queue.isReady) {
+        if (q.isReady) {
             // this seemingly superfluous check prevents race conditions in the case that
             // the "executor" function is not called synchronously
             obs.next();
@@ -76,13 +87,13 @@ export function makeEEObservable(queue: Queue, ee: EE, opts: Object) {
     return obs;
 }
 
-export function makeGenericObservable(fn: Function, opts: Object) {
+export function makeGenericObservable(fn?: Function, opts?: IGenericObservable): Observable<any> {
 
     opts = opts || {};
     const isCallCompleted = opts.isCallCompleted;
     const isPublish = opts.isPublish;
 
-    let obs = Rx.Observable.create(obs => {
+    let obs = Observable.create(obs => {
         if (fn) {
             fn(function (err, val) {
                 if (err) {
@@ -115,31 +126,31 @@ export function makeGenericObservable(fn: Function, opts: Object) {
 }
 
 
-export function countLines(queue: Queue, pattern: string | null) {
-    return _countLines(queue.fp, pattern);
+export function countLines(q: Queue, pattern?: string): Observable<any> {
+    return _countLines(q.fp, pattern);
 }
 
 
-export function findFirstLine(queue: any, pattern: string | null) {
+export function findFirstLine(q: Queue, pattern?: string): Observable<any> {
 
     pattern = pattern || '\\S+';
 
     const count = 1;
 
-    return sed(queue, pattern, 'false', count)
+    return sed(q, pattern, false, count)
         .map(data => {
             return data[0];
         });
 }
 
 
-export function removeOneLine(queue: Queue, pattern: string | null) {
+export function removeOneLine(q: Queue, pattern?: string): Observable<any> {
 
     pattern = pattern || '\\S+';
 
     const count = 1;
 
-    return sed(queue, pattern, 'true', count)
+    return sed(q, pattern, true, count)
         .map(data => {
             if (data.length > 1) {
                 console.error(colors.red(' => OPQ Implementation Warning => ' +
@@ -150,9 +161,9 @@ export function removeOneLine(queue: Queue, pattern: string | null) {
 }
 
 
-export function removeMultipleLines(queue: Queue, pattern: any, count: any) {
+export function removeMultipleLines(q: Queue, pattern?: string, count?: any): Observable<any> {
 
-    return sed(queue, pattern, 'true', count)
+    return sed(q, pattern, true, count)
         .map(data => {
             assert(Array.isArray(data),
                 ' => Implementation error => data should be in an array format.');
@@ -161,12 +172,12 @@ export function removeMultipleLines(queue: Queue, pattern: any, count: any) {
 
 }
 
-export function writeFile(queue: Queue, data: any) {
+export function writeFile(q: Queue, data?: string): Observable<any> {
 
-    const filePath = queue.fp;
+    const filePath = q.fp;
     data = data || '';
 
-    return Rx.Observable.create(obs => {
+    return Observable.create(obs => {
         fs.writeFile(filePath, data, err => {
             if (err) {
                 obs.error(err);
@@ -185,9 +196,9 @@ export function writeFile(queue: Queue, data: any) {
 }
 
 
-export function appendFile(queue: Queue, lines: any, priority: any) {
+export function appendFile(q: QProto, lines: Array<string>, priority: number): Observable<any> {
 
-    const filePath = queue.fp;
+    const filePath = q.fp;
 
     assert(Number.isInteger(priority), ' => Implementation error => "priority" must be an integer.');
 
@@ -209,7 +220,7 @@ export function appendFile(queue: Queue, lines: any, priority: any) {
 
     const data = '\n' + lines.join('\n') + '\n';
 
-    return Rx.Observable.create(obs => {
+    return Observable.create(obs => {
         fs.appendFile(filePath, data, {flag: 'a'}, err => {
             if (err) {
                 obs.error(err);
@@ -227,8 +238,8 @@ export function appendFile(queue: Queue, lines: any, priority: any) {
 
 }
 
-export function delayObservable(delay: any, isCompleted: any) {
-    return Rx.Observable.create(obs => {
+export function delayObservable(delay?: number, isCompleted?: boolean): Observable<any> {
+    return Observable.create(obs => {
         setTimeout(function () {
             obs.next();
             if (isCompleted) {
@@ -238,28 +249,28 @@ export function delayObservable(delay: any, isCompleted: any) {
     });
 }
 
-export function ifFileExistAndIsAllWhiteSpaceThenTruncate(queue: Queue) {
+export function ifFileExistAndIsAllWhiteSpaceThenTruncate(q: Queue): Observable<any> {
 
-    return readFile(queue)
+    return readFile(q)
         .flatMap(data => {
             if (data) {
-                return makeGenericObservable(null, null);
+                return makeGenericObservable();
             }
             else {
                 // if not data, then we truncate file
-                return writeFile(queue, null);
+                return writeFile(q);
             }
         });
 
 }
 
 
-export function genericAppendFile(queue: Queue, data: any) {
+export function genericAppendFile(q: Queue, data: any): Observable<any> {
 
     const d = data || '';
-    const fp = queue.filepath;
+    const fp = q.filepath;
 
-    return Rx.Observable.create(obs => {
+    return Observable.create(obs => {
         // try to open file for reading and writing
         // fs.writeFile(fp, d, {flag: 'w+'}, err => {
         fs.appendFile(fp, d, {}, err => {
@@ -279,7 +290,7 @@ export function genericAppendFile(queue: Queue, data: any) {
     });
 }
 
-export function acquireLockRetry(queue: Queue, obj: any) {
+export function acquireLockRetry(q: QProto, obj: any): Observable<any> {
 
     if (!obj.error) {
         return makeGenericObservable(null, null)
@@ -288,14 +299,14 @@ export function acquireLockRetry(queue: Queue, obj: any) {
 
     console.log('\n\n', colors.red(' => need to retry acquiring lock.'), '\n\n');
 
-    return Rx.Observable.interval(3500)
+    return Observable.interval(3500)
         .takeUntil(
             // take until either the timeout occurs or we actually acquire the lock
-            Rx.Observable.race(
-                acquireLock(queue, obj.name)
+            Observable.race(
+                acquireLock(q, obj.name)
                     .filter(obj => !obj.error),
 
-                Rx.Observable.timer(2600)
+                Observable.timer(2600)
                     .flatMap(() => {
                         return Rx.Observable.throw(' => Rx.Observable.throw => acquire lock timed out')
                     })
@@ -305,9 +316,9 @@ export function acquireLockRetry(queue: Queue, obj: any) {
 }
 
 
-export function backpressure(queue: Queue, val: Object, fn: Function) {
+export function backpressure(q: Queue, val: IBackpressureObj, fn: Function): Observable<any> {
 
-    return Rx.Observable.create(sub => {
+    return Observable.create(sub => {
 
         fn.call(sub, function (err, ret) {
             if (err) {
@@ -328,11 +339,11 @@ export function backpressure(queue: Queue, val: Object, fn: Function) {
 }
 
 
-export function readFile$(queue: Queue) {
+export function readFile$(q: QProto): Observable<any> {
 
-    const fp = queue.filepath;
+    const fp = q.filepath;
 
-    return Rx.Observable.create(obs => {
+    return Observable.create(obs => {
         fs.readFile(fp, 'utf8', function (err, data) {
             if (err) {
                 console.log('errrror => ', err.stack);
@@ -351,11 +362,11 @@ export function readFile$(queue: Queue) {
 }
 
 
-export function readFile(queue: any) {
+export function readFile(q: Queue): Observable<any> {
 
-    const fp = queue.filepath;
+    const fp = q.filepath;
 
-    return Rx.Observable.create(obs => {
+    return Observable.create(obs => {
 
         const n = cp.spawn('grep', ['-m', '1', '-E', '\\S+', fp]);
 
@@ -405,43 +416,42 @@ export function readFile(queue: any) {
 }
 
 
-export function waitForClientCount(queue: Queue, opts: Object) {
+export function waitForClientCount(q: QProto, opts: any): Observable<any> {
 
     opts = opts || {};
     const count = opts.count || 5;
     const timeout = opts.timeout || 3000;
-
     const index = opts.index;
 
-    return queue.obsClient.bufferCount(count)
+    return q.obsClient.bufferCount(count)
         .flatMap(value => {
 
             const first = value.shift();
             const last = value[value.length - 1];
 
             if (opts.index > 3 || (last.clientCount - first.clientCount < 2)) {
-                return Rx.Observable.timer(10)
+                return Observable.timer(10)
             }
             else {
                 opts.index = opts.index || 0;
                 opts.index++;
-                return waitForClientCount.apply(null, [queue, opts]);
+                return waitForClientCount.apply(null, [q, opts]);
             }
 
         });
 }
 
 
-export function acquireLock(queue: Queue, name: string) {
+export function acquireLock(q: QProto, name: string): Observable<any> {
 
-    const lock = queue.lock;
-    const client = queue.client;
+    const lock = q.lock;
+    const client = q.client;
 
     if (typeof name !== 'string') {
         throw new Error(' => OPQ implementation error => no name for mutex append.');
     }
 
-    return Rx.Observable.create(obs => {
+    return Observable.create(obs => {
 
         client.lock(lock, {append: name}, function (err, unlock, id) {
             if (err) {
@@ -455,7 +465,6 @@ export function acquireLock(queue: Queue, name: string) {
                     debug('\n\n', 'drain locks/unlocks (locking) => ', drainLocks, drainUnlocks, '\n\n');
                 }
             }
-
 
             debug(util.inspect({
                 acquireLockCount: acquireLockCount,
@@ -478,13 +487,13 @@ export function acquireLock(queue: Queue, name: string) {
     });
 }
 
-export function releaseLock(queue: Queue, lockUuid: string | boolean) {
+export function releaseLock(q: QProto, lockUuid: string | boolean): Observable<any> {
 
-    const client = queue.client;
+    const client = q.client;
 
     if (!lockUuid) {
         console.error('\n\n', new Error('Cannot release lock without force or proper uuid.').stack, '\n\n');
-        return Rx.Observable.throw('Cannot release lock without force or proper uuid.\n\n');
+        return Observable.throw('Cannot release lock without force or proper uuid.\n\n');
     }
 
     if (String(lockUuid).startsWith('<drain')) {
@@ -492,9 +501,9 @@ export function releaseLock(queue: Queue, lockUuid: string | boolean) {
         debug('\n\n', 'drain locks/unlocks => ', drainLocks, drainUnlocks, '\n\n');
     }
 
-    return Rx.Observable.create(obs => {
+    return Observable.create(obs => {
 
-        const lock = queue.lock;
+        const lock = q.lock;
 
         client.unlock(lock, lockUuid, function (err) {
 

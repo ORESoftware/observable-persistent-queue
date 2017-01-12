@@ -46,3 +46,23 @@ https://www.typescriptlang.org/docs/handbook/compiler-options.html
  https://medium.com/@tjholowaychuk/dos-and-don-ts-of-aws-lambda-7dfcab7ad115#.jmygjbdg7
 
  https://twitter.com/kentcdodds/status/811448360854917120
+
+ https://github.com/Microsoft/TypeScript/issues/13399#issuecomment-271939777
+
+
+ files and folders starting with a . are ignored by the glob patterns.
+ this to accomodate for hidden folders that tools like git rely on.
+ You need to add the folder starting with a . explcitlly in your include patter:
+
+   "include": [
+     "./**/*",
+     "./test/.suman/**/*"
+   ],
+
+ also one note, you need to exclude your outDir, or you will be consuming the output again,
+ given that you have --allowJs set. so your exclude patterns should be:
+
+   "exclude": [
+     "node_modules",
+     "./dist"
+   ]

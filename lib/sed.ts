@@ -4,40 +4,45 @@
 import cp = require('child_process');
 import path = require('path');
 import util = require('util');
+import assert = require('assert');
 
 //npm
 import rpl = require('replace-line');
 import Rx = require('rxjs')
 import _ = require('lodash');
 import colors = require('colors/safe');
+import {Observable} from 'rxjs';
+import {Queue} from './queue';
 
 //project
 const debug = require('debug')('cmd-queue');
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-export = function (queue: any, pattern: any, isReplace: any, $count: any) {
+export = function sed(q: Queue, pattern: string, $isReplace: boolean, $count: number): Observable<any> {
 
-    const file = queue.filepath;
-    const patterns = _.flattenDeep([pattern]);
+    const file : string = q.filepath;
+    const patterns : Array<string> = _.flattenDeep([pattern]);
 
-    //force boolean to string...s
-    isReplace = String(isReplace);
+    //force boolean to string
+    const isReplace: string = String($isReplace);
+
+    assert(isReplace === 'true' || isReplace === 'false', ' => Boolean to string conversion failed.');
 
     let priority = 0;
 
-    if (queue.priority) {
+    if (q.priority) {
 
         // queue.priorityCycleIndex = queue.priorityCycleIndex + count;
-        const ind = queue._priority.priorityCycleIndex++;
-        const cycleNumber = ind % queue._priority.totalPriorityCycles;
+        const ind = q._priority.priorityCycleIndex++;
+        const cycleNumber = ind % q._priority.totalPriorityCycles;
 
         // console.log('priority cycle index => ', ind);
         // console.log(' => Current cycle-number => ', cycleNumber);
 
         let accumulatedValue = 0;
 
-        queue._priority.levels.every(function (obj) {
+        q._priority.levels.every(function (obj) {
 
             accumulatedValue += obj.cycles;
             if (cycleNumber <= accumulatedValue) {
@@ -54,16 +59,16 @@ export = function (queue: any, pattern: any, isReplace: any, $count: any) {
         patterns.push('\\S+');
     }
 
-    return Rx.Observable.create(obs => {
+    return Observable.create(obs => {
 
-        process.nextTick(function(){
+        process.nextTick(function () {
 
             const count = $count || 1;
             const prioritySearchCap = 20;
             const data = rpl.run(file, patterns, isReplace, count, priority, prioritySearchCap);
 
             const d = {
-                file:file,
+                file: file,
                 pattern: pattern,
                 isReplace: isReplace,
                 count: count

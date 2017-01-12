@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "types": ["node","lodash"],
+    "types": ["node","lodash","rxjs"],
+    "typeRoots": [ "node_modules/@types"],
     "compileOnSave": true,
     "target": "es2017",
     "module": "commonjs",

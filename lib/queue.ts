@@ -20,6 +20,10 @@ import lmUtils = require('live-mutex/utils');
 import {QProto} from './queue-proto';
 import handlePriority = require('./handle-priority');
 import startTail = require('./start-tail');
+import {Observable} from 'rxjs';
+import {Subject} from 'rxjs';
+import {IPriority, IPriorityInternal, IQueueBuilder, IDequeueOpts} from "./object-interfaces";
+
 
 ////////////////////////////// add some of our own operators ///////////////////////////////////
 
@@ -43,7 +47,7 @@ process.on('warning', function (w) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //we could use console.time, but this is fine
-const start = Date.now();
+const start : number = Date.now();
 
 // helper functions
 const {
@@ -69,20 +73,12 @@ const {
 
 export class Queue extends QProto {
 
-    filepath: string;
-    fp: string;
-    port: number;
-    isEmptyStream: Rx.Subject;
-    obsDequeue: Rx.Subject;
-    obsEnqueue: Rx.Subject;
-    obsClient: Rx.Subject;
-    queueStream: Rx.Observable;
     init: Function;
-    isReady: boolean;
-    priority: Object;
-    _priority: Object;
+    priority: IPriority;
+    _priority: IPriorityInternal;
 
-    constructor(obj: any) {
+
+    constructor(obj: IQueueBuilder) {
 
         super(obj);
 
@@ -100,13 +96,13 @@ export class Queue extends QProto {
             handlePriority(obj, this);
         }
 
-        this.isEmptyStream = new Rx.Subject();
-        this.obsDequeue = new Rx.Subject();
+        this.isEmptyStream = new Subject<any>();
+        this.obsDequeue = new Subject<any>();
         let index = 0;
 
-        let obsEnqueue = this.obsEnqueue = new Rx.Subject();
+        let obsEnqueue = this.obsEnqueue = new Subject<any>();
 
-        this.queueStream = Rx.Observable.create(obs => {
+        this.queueStream = Observable.create(obs => {
 
             const push = Rx.Subscriber.create(v => {
                 if ((index % obsEnqueue.observers.length) === obsEnqueue.observers.indexOf(push)) {
@@ -129,13 +125,12 @@ export class Queue extends QProto {
         this.isReady = false;
         let callable = true;
 
-        let obsClient = this.obsClient = new Rx.Subject();
+        let obsClient = this.obsClient = new Subject<any>();
         const clientEE = new EE();
 
         clientEE.setMaxListeners(200);
 
         function onClientConnectionChange(clientCount) {
-            // console.log('client count => ', clientCount);
             obsClient.next({
                 time: Date.now(),
                 clientCount: clientCount
@@ -158,7 +153,7 @@ export class Queue extends QProto {
 
             const promise = lmUtils.conditionallyLaunchSocketServer({port: port});
 
-            return Rx.Observable.fromPromise(promise)
+            return Observable.fromPromise(promise)
                 .flatMap(() => {
                     this.client = new Client({key: lck, port: port, listener: onClientConnectionChange});
                     return acquireLock(this, 'init')
@@ -192,16 +187,16 @@ export class Queue extends QProto {
     }
 
 
-    eqStream(pauser: Rx.Subject, opts: any) {
+    eqStream(pauser: Subject<any>, opts: any) : Observable<any>{
 
         if (!(pauser instanceof Rx.Observable)) {
             opts = pauser || {};
-            pauser = new Rx.Subject();
+            pauser = new Subject<any>();
         }
 
         opts = opts || {};
 
-        let $obs = Rx.Observable.zip(
+        let $obs : Observable<any> = Observable.zip(
             this.queueStream,
             pauser
         );
@@ -224,7 +219,7 @@ export class Queue extends QProto {
             })
             .flatMap((obj: any) => {
                 return releaseLock(this, obj.id)
-                    .filter(() => obj.l)
+                    .filter(() => !!obj.l)
                     .map(() => {
                         return {
                             data: obj.l,
@@ -241,12 +236,12 @@ export class Queue extends QProto {
 
     }
 
-    readAll() {
+    readAll() : Subject<any> {
         return this.obsEnqueue;
     }
 
 
-    isNotEmpty(obs: any) {
+    isNotEmpty(obs?: Subject<any>): Observable<any> {
 
         if (!obs) {
             obs = new Rx.Subject();
@@ -267,7 +262,7 @@ export class Queue extends QProto {
                         return acquireLockRetry(this, obj)
                     })
             })
-            .flatMap(obj => {
+            .flatMap((obj: any) => {
                 return findFirstLine(this, null)
                     .flatMap(l => {
                         return releaseLock(this, obj.id)
@@ -278,7 +273,7 @@ export class Queue extends QProto {
             })
             .filter(l => {
                 // filter out any lines => only fire event if there is no line
-                return l;
+                return !!l;
             })
             .map(() => {
                 console.log(colors.yellow(' => Queue is *not* empty.'));
@@ -294,7 +289,7 @@ export class Queue extends QProto {
     }
 
 
-    isEmpty(obs: any) {
+    isEmpty(obs: any) : Observable<any>{
 
         if (!obs) {
             obs = new Rx.Subject();
@@ -344,9 +339,9 @@ export class Queue extends QProto {
     }
 
 
-    drain(obs: any, opts: any) {
+    drain(obs: any, opts: any) : Observable<any>{
 
-        if (!(obs instanceof Rx.Observable)) {
+        if (!(obs instanceof Observable)) {
             opts = obs || {};
             obs = new Rx.Subject();
         }
@@ -417,7 +412,7 @@ export class Queue extends QProto {
     }
 
 
-    backpressure(val: any, fn: any) {
+    backpressure(val: any, fn: any) : Observable<any>{
         return backpressure(this, val, fn);
     }
 
@@ -426,16 +421,16 @@ export class Queue extends QProto {
         // should just truncate file
     }
 
-    getSize() {
+    getSize() : Observable<any>{
         return countLines(this, null);
     }
 
 
-    enqueue(lines: any, opts: any) {
+    enqueue(lines: any, opts: any) : Observable<any>{
         return this.enq(lines, opts);
     }
 
-    enq(lines: any, opts: any) {
+    enq(lines: any, opts: any) : Observable<any>{
 
         opts = opts || {};
 
@@ -496,12 +491,12 @@ export class Queue extends QProto {
     };
 
 
-    dequeue(opts: any) {
+    dequeue(opts: any) : Observable<any>{
         return this.deq(opts);
 
     }
 
-    deq(opts: any) {
+    deq(opts: IDequeueOpts) : Observable<any>{
 
         if (!opts || !opts.lines) {
 

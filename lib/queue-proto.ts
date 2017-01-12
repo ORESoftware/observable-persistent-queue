@@ -11,6 +11,8 @@ import Rx = require('rxjs');
 import _ = require('lodash');
 import uuidV4 = require('uuid/v4');
 import colors = require('colors/safe');
+import {Observable} from 'rxjs';
+import {Subject} from 'rxjs';
 
 //project
 const debug = require('debug')('cmd-queue');
@@ -18,6 +20,8 @@ import EE = require('events');
 import Client = require('live-mutex/client');
 import lmUtils = require('live-mutex/utils');
 import tail = require('./tail');
+import {IPriority, IPriorityInternal, IDequeueOpts,IQueueBuilder} from "./object-interfaces";
+import {Queue} from "./queue";
 
 const {
 
@@ -33,15 +37,27 @@ const {
 
 export abstract class QProto {
 
+    isReady: boolean;
     lock: string;
     client: Client;
+    port: number;
     init: Function;
     dateCreated: Date;
+    fp?: string;
+    filePath?: string;
+    filepath?: string;
+    isEmptyStream: Subject<any>;
+    obsEnqueue: Subject<any>;
+    obsDequeue: Subject<any>;
+    obsClient: Subject<any>;
+    queueStream: Observable<any>;
 
-    constructor(obj){
+
+    constructor(obj: IQueueBuilder) {
 
         this.lock = ['[OPQ]>', uuidV4()].join('');
         this.dateCreated = new Date();
+        this.filePath = obj.filePath;
 
     }
 
@@ -70,7 +86,7 @@ export abstract class QProto {
 
         let $add = this.init()
             .flatMap(() => {
-                return waitForClientCount(this, {timeout: 3000, count: 5})
+                return waitForClientCount(this, {timeout: 3000, count: 5, index: null})
             })
             .flatMap(() => {
                 return acquireLock(this, 'enqControlled')
@@ -100,7 +116,7 @@ export abstract class QProto {
 
     }
 
-    _deqWait(opts: any) {
+    _deqWait(opts: IDequeueOpts): Subject<any> {
 
         const count = opts.count;
         const isConnect = opts.isConnect !== false;
@@ -113,7 +129,7 @@ export abstract class QProto {
         // store the lines here which we will eventually send back
         let ret = <any> [];
 
-        const obs = <any> new Rx.Subject();
+        const obs: any = new Subject<any>();
 
         process.nextTick(function () {
             // this will kick-off the below observable chain
@@ -131,7 +147,7 @@ export abstract class QProto {
                     });
             })
             .flatMap(obj => {
-                return removeMultipleLines(this, pattern, count - ret.length)
+                return removeMultipleLines(this as Queue, pattern, count - ret.length)
                     .map(lines => ({obj: obj, lines: lines}))
             })
             .flatMap((data: any) => {
@@ -141,8 +157,6 @@ export abstract class QProto {
                 ret = ret.concat(lines).filter(i => i);
                 const len = ret.length;
                 const diff = min - len;
-
-                console.log('diff => ', diff);
 
                 if (diff < 1) {
                     $dequeue.complete();
@@ -154,8 +168,8 @@ export abstract class QProto {
                     return releaseLock(this, obj.id)
                         .flatMap(() => {
                             console.log('diff => ', diff);
-                            return Rx.Observable.race(
-                                Rx.Observable.timer(8500),
+                            return Observable.race(
+                                Observable.timer(8500),
                                 // we only want to re-invoke this chain after more items have been added to the queue
                                 // otherwise there would be no point
                                 // however, after 8+ seconds, we might as well retry just in case?
@@ -183,7 +197,7 @@ export abstract class QProto {
         if (isConnect) {
             // this is necessary, if the user does not call subscribe,
             // if the user does not want to auto-subscribe, they will have to pass in isConnect=false.
-            $dequeue = $dequeue.publish();
+            $dequeue  = $dequeue.publish();
             $dequeue.connect();
         }
 
