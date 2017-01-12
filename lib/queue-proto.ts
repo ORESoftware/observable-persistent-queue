@@ -20,8 +20,8 @@ import EE = require('events');
 import Client = require('live-mutex/client');
 import lmUtils = require('live-mutex/utils');
 import tail = require('./tail');
-import {IPriority, IPriorityInternal, IDequeueOpts,IQueueBuilder} from "./object-interfaces";
-import {Queue} from "./queue";
+import {IPriority, IPriorityInternal, IDequeueOpts, IQueueBuilder, IEnqueueOpts} from "./object-interfaces";
+
 
 const {
 
@@ -51,6 +51,8 @@ export abstract class QProto {
     obsDequeue: Subject<any>;
     obsClient: Subject<any>;
     queueStream: Observable<any>;
+    priority: IPriority;
+    _priority: IPriorityInternal;
 
 
     constructor(obj: IQueueBuilder) {
@@ -61,25 +63,24 @@ export abstract class QProto {
 
     }
 
-    getLock() {
+    getLock() : string{
         return this.lock;
     }
 
-    getClient() {
+
+    getClient() : Client {
         return this.client;
     }
 
-    close() {
+    close() : void {
         this.client && this.client.close();
     }
 
-    _enqControlled(lines: any, opts: any) {
+    _enqControlled(lines: string | Array<string>, opts: IEnqueueOpts) {
 
         opts = opts || {};
 
         const priority = opts.priority || 1;
-
-        console.log(' \n We are being controlled. \n ');
         const isShare = opts.isShare !== false;
 
         lines = _.flattenDeep([lines]);
@@ -89,7 +90,7 @@ export abstract class QProto {
                 return waitForClientCount(this, {timeout: 3000, count: 5, index: null})
             })
             .flatMap(() => {
-                return acquireLock(this, 'enqControlled')
+                return acquireLock(this, '[<enqControlled>]')
                     .flatMap(obj => {
                         return acquireLockRetry(this, obj)
                     })
@@ -147,7 +148,7 @@ export abstract class QProto {
                     });
             })
             .flatMap(obj => {
-                return removeMultipleLines(this as Queue, pattern, count - ret.length)
+                return removeMultipleLines(this, pattern, count - ret.length)
                     .map(lines => ({obj: obj, lines: lines}))
             })
             .flatMap((data: any) => {

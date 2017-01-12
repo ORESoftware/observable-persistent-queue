@@ -13,6 +13,13 @@ export interface IQueueBuilder {
 
 }
 
+export interface IEnqueueOpts {
+
+    isShare?: boolean;
+    priority?: number;
+    controlled?: boolean;
+
+}
 
 export interface IDequeueOpts {
 
@@ -32,8 +39,19 @@ export interface IPriorityLevel {
 
 }
 
+export interface IDrainOpts {
+
+    priority?: number;
+    force?: boolean;
+    backpressure?: boolean;
+    isConnect?: boolean;
+    delay?: number;
+
+}
+
 export interface IPriority {
 
+    first: number;
     levels: Array<IPriorityLevel>;
 
 }
@@ -41,10 +59,11 @@ export interface IPriority {
 
 export interface IPriorityInternal {
 
-    totalPriorityCycles: number;
-    priorityCycleIndex: number;
-    internalLevels: Array<number>;
-    levels: Array<IPriorityLevel>;
+    first?: number;
+    totalPriorityCycles?: number;
+    priorityCycleIndex?: number;
+    internalLevels?: Array<number>;
+    levels?: Array<IPriorityLevel>;
 
 }
 

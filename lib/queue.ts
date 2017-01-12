@@ -20,9 +20,9 @@ import lmUtils = require('live-mutex/utils');
 import {QProto} from './queue-proto';
 import handlePriority = require('./handle-priority');
 import startTail = require('./start-tail');
-import {Observable} from 'rxjs';
+import {Observable} from 'rxjs/Rx';
 import {Subject} from 'rxjs';
-import {IPriority, IPriorityInternal, IQueueBuilder, IDequeueOpts} from "./object-interfaces";
+import {IPriority, IPriorityInternal, IQueueBuilder, IDequeueOpts, IDrainOpts, IEnqueueOpts} from "./object-interfaces";
 
 
 ////////////////////////////// add some of our own operators ///////////////////////////////////
@@ -47,7 +47,7 @@ process.on('warning', function (w) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //we could use console.time, but this is fine
-const start : number = Date.now();
+const start: number = Date.now();
 
 // helper functions
 const {
@@ -187,7 +187,7 @@ export class Queue extends QProto {
     }
 
 
-    eqStream(pauser: Subject<any>, opts: any) : Observable<any>{
+    eqStream(pauser: Subject<any>, opts: any): Observable<any> {
 
         if (!(pauser instanceof Rx.Observable)) {
             opts = pauser || {};
@@ -196,7 +196,7 @@ export class Queue extends QProto {
 
         opts = opts || {};
 
-        let $obs : Observable<any> = Observable.zip(
+        let $obs: Observable<any> = Observable.zip(
             this.queueStream,
             pauser
         );
@@ -236,7 +236,7 @@ export class Queue extends QProto {
 
     }
 
-    readAll() : Subject<any> {
+    readAll(): Subject<any> {
         return this.obsEnqueue;
     }
 
@@ -263,7 +263,7 @@ export class Queue extends QProto {
                     })
             })
             .flatMap((obj: any) => {
-                return findFirstLine(this, null)
+                return findFirstLine(this)
                     .flatMap(l => {
                         return releaseLock(this, obj.id)
                             .map(() => {
@@ -289,10 +289,10 @@ export class Queue extends QProto {
     }
 
 
-    isEmpty(obs: any) : Observable<any>{
+    isEmpty(obs: Subject<any>): Observable<any> {
 
         if (!obs) {
-            obs = new Rx.Subject();
+            obs = new Subject();
 
             process.nextTick(function () {
                 obs.next();
@@ -310,7 +310,7 @@ export class Queue extends QProto {
                         return acquireLockRetry(this, obj)
                     })
             })
-            .flatMap(obj => {
+            .flatMap((obj: any) => {
                 return findFirstLine(this, null)
                     .flatMap(l => {
                         return releaseLock(this, obj.id)
@@ -325,7 +325,6 @@ export class Queue extends QProto {
             })
             .map(() => {
                 console.log(colors.yellow(' => Is empty is true.'));
-                obs.isHellaComplete = true;
                 // obs.complete();
                 return {isEmpty: true}
             })
@@ -339,23 +338,26 @@ export class Queue extends QProto {
     }
 
 
-    drain(obs: any, opts: any) : Observable<any>{
+    drain(obs: Subject<any> | null, opts?: IDrainOpts): Observable<any> {
 
-        if (!(obs instanceof Observable)) {
-            opts = obs || {};
-            obs = new Rx.Subject();
+        if (!(obs instanceof Subject)) {
+            if (obs) {
+                console.error(' => First argument to drain() should be an RxJS Subject instance.');
+            }
+            opts = opts || {};
+            obs = new Subject<any>();
         }
 
         opts = opts || {};
         assert(typeof opts === 'object' && !Array.isArray(opts), ' => OPQ usage error => opts must be an object.');
 
-        const backpressure = opts.backpressure === true;
-        const isConnect = opts.isConnect === true;
-        const delay = opts.delay || 500;
 
         //TODO: if force, we drain the queue even if there are no subscribers to this observable
         //TODO: otherwise if there are no subscribers, the callback will never fire
         const force = opts.force;
+        const backpressure = opts.backpressure === true;
+        const isConnect = opts.isConnect === true;
+        const delay = opts.delay || 500;
 
         process.nextTick(function () {
             obs.next();
@@ -364,9 +366,7 @@ export class Queue extends QProto {
         const emptyObs = new Rx.Subject();
 
         let $obs = obs
-            .takeWhile(() => {
-                return this.isNotEmpty();
-            })
+            .takeUntil(this.isNotEmpty())
             // .startWith(0)
             .flatMap(() => {
                 return this.init();
@@ -377,8 +377,8 @@ export class Queue extends QProto {
                         return acquireLockRetry(this, obj)
                     });
             })
-            .flatMap(obj => {
-                return removeOneLine(this, null)
+            .flatMap((obj:any) => {
+                return removeOneLine(this)
                     .flatMap(l => {
                         return releaseLock(this, obj.id)
                             .map(() => {
@@ -411,8 +411,11 @@ export class Queue extends QProto {
 
     }
 
+    isPriorityQueue() : boolean {
+        return this.priority && this._priority && true;
+    }
 
-    backpressure(val: any, fn: any) : Observable<any>{
+    backpressure(val: any, fn: Function): Observable<any> {
         return backpressure(this, val, fn);
     }
 
@@ -421,16 +424,16 @@ export class Queue extends QProto {
         // should just truncate file
     }
 
-    getSize() : Observable<any>{
+    getSize(): Observable<any> {
         return countLines(this, null);
     }
 
 
-    enqueue(lines: any, opts: any) : Observable<any>{
+    enqueue(lines: string | Array<string>, opts: IEnqueueOpts): Observable<any> {
         return this.enq(lines, opts);
     }
 
-    enq(lines: any, opts: any) : Observable<any>{
+    enq(lines: string | Array<string>, opts: IEnqueueOpts): Observable<any> {
 
         opts = opts || {};
 
@@ -439,9 +442,10 @@ export class Queue extends QProto {
         }
 
         const priority = opts.priority || 1;
+
         if (opts.priority) {
             assert(typeof this._priority === 'object', ' => You used the priority option to enqueue an item,' +
-                ' but this queue was not initialized with priority data.');
+                ' but this queue was not initialized as a priority queue.');
 
             let il = this._priority.internalLevels;
             const highestLevel = il[0];
@@ -491,12 +495,12 @@ export class Queue extends QProto {
     };
 
 
-    dequeue(opts: any) : Observable<any>{
+    dequeue(opts: any): Observable<any> {
         return this.deq(opts);
 
     }
 
-    deq(opts: IDequeueOpts) : Observable<any>{
+    deq(opts: IDequeueOpts): Observable<any> {
 
         if (!opts || !opts.lines) {
 

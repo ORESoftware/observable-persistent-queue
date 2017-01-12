@@ -60,7 +60,7 @@ Test.create(__filename, {},
     before.cb({timeout: 5000}, h => {
 
         Rx.Observable.interval(10)
-            .take(300)
+            .take(30)
             .map(function (val) {
                 return q.enq('foo bar baz', {
                     priority: val

@@ -2,7 +2,8 @@
 
 ##     OPQ  (Observable Persistent Queue)
 
-This project was born of the necessity to create a local message queue usable by NPM libraries, especially
+This project was born of the necessity to create a simple persistent message queue that 
+woud lbe usable by NPM libraries, so that no database would need to be installed; this is especially useful
 during NPM postinstall routines. NPM install commands should not happen in parallel, so we need a queue of some variety.
 Not only that, the queue needs to be persistent and shared, such that if npm install commands happen in parallel and are 
 requested via multiple processes, that this information can be shared in one place.
@@ -12,15 +13,27 @@ requested via multiple processes, that this information can be shared in one pla
 * <b>Queue</b> => standard FIFO queue, in this case, lines in a text file, separated by newline chars; however, you can 
 create priority requests and pull items off the queue in any order you wish based on custom searches/queries.
 
-# Disclaimer
+# Installation
 
-This library is in beta; not all features mentioned are working as described.
+###  ``` npm install -S observable-persistent-queue```
+
+
+## Disclaimer
+
 Because the lock/unlock cycle takes about 3 ms, the queue will
 grow unboundedly if items are added to the queue faster than every 15 ms. Unfortunately adding more readers 
 in different processes probably will not help drain the queue, because locking/unlocking is still a bottleneck,
 and the more lock/unlock requestors the slower it is for everyone to read from the queue. This library
- will delay adding new items to the queue if the number of requests waiting for a lock is greater than a certain 
- number.
+will delay adding new items to the queue if the number of requests waiting for a lock is greater than a certain 
+number. You can use the {controlled:true} option with q.enq() to limit the rate at which items are added to the 
+queue.
+ 
+ 
+# Limitations 
+
+You cannot store unicode characters in the text file queue; also for the moment color characters ':' are not permitted,
+although that restriction may be removed later.
+
 
 # Design
 
@@ -28,10 +41,6 @@ This library uses live-mutex for locking to control read/write access to the que
 This is much more robust than file locking (with the NPM lockfile library or similar). As stated, this 
 library uses RxJS, specifically RxJS5.
 
-
-# Installation
-
-##  ``` npm install --save observable-persistent-queue```
 
 # Usage / API
 
@@ -144,11 +153,15 @@ q.deq({
 
 ```
 
+## Actual real-life usage examples integrated with RxJS
+
+Please see the examples directory.
 
 
-## cleaning up when you're done
+# cleaning up when you're done
 
-### TBD
+
+
 
 
 

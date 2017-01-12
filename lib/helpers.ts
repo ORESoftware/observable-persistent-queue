@@ -13,7 +13,7 @@ import Rx = require('rxjs');
 import _ = require('lodash');
 import uuidV4 = require('uuid/v4');
 import colors = require('colors/safe');
-import {Observable} from 'rxjs';
+import {Observable} from 'rxjs/Rx';
 
 //project
 import sed = require('./sed');
@@ -21,7 +21,6 @@ import _countLines = require('./count-lines');
 import {Queue} from "./queue";
 import {QProto} from "./queue-proto";
 const debug = require('debug')('cmd-queue');
-const a = require('./test');
 
 import {
 
@@ -161,7 +160,7 @@ export function removeOneLine(q: Queue, pattern?: string): Observable<any> {
 }
 
 
-export function removeMultipleLines(q: Queue, pattern?: string, count?: any): Observable<any> {
+export function removeMultipleLines(q: QProto, pattern?: string, count?: any): Observable<any> {
 
     return sed(q, pattern, true, count)
         .map(data => {
@@ -196,11 +195,12 @@ export function writeFile(q: Queue, data?: string): Observable<any> {
 }
 
 
-export function appendFile(q: QProto, lines: Array<string>, priority: number): Observable<any> {
+export function appendFile(q: QProto, $lines: Array<string> | string, priority: number): Observable<any> {
 
     const filePath = q.fp;
-
     assert(Number.isInteger(priority), ' => Implementation error => "priority" must be an integer.');
+
+    let lines : Array<string> = _.flattenDeep([$lines]);
 
     //ensure new line separation
     lines = lines.map(function (l) {
@@ -232,7 +232,7 @@ export function appendFile(q: QProto, lines: Array<string>, priority: number): O
         });
 
         return function () {
-            // console.log('disposing appendFile()');
+
         }
     });
 
@@ -297,16 +297,16 @@ export function acquireLockRetry(q: QProto, obj: any): Observable<any> {
             .map(() => obj);
     }
 
-    console.log('\n\n', colors.red(' => need to retry acquiring lock.'), '\n\n');
+    console.log('\n\n', colors.red.bold(' => need to retry acquiring lock.'), '\n\n');
 
-    return Observable.interval(3500)
+    return Observable.interval(1500)
         .takeUntil(
             // take until either the timeout occurs or we actually acquire the lock
             Observable.race(
                 acquireLock(q, obj.name)
                     .filter(obj => !obj.error),
 
-                Observable.timer(2600)
+                Observable.timer(3600)
                     .flatMap(() => {
                         return Rx.Observable.throw(' => Rx.Observable.throw => acquire lock timed out')
                     })
