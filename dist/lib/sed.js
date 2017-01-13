@@ -1,22 +1,22 @@
 'use strict';
-var assert = require("assert");
-var rpl = require("replace-line");
-var _ = require("lodash");
-var rxjs_1 = require("rxjs");
-var debug = require('debug')('cmd-queue');
+const assert = require("assert");
+const rpl = require("replace-line");
+const _ = require("lodash");
+const rxjs_1 = require("rxjs");
+const debug = require('debug')('cmd-queue');
 module.exports = function sed(q, pattern, $isReplace, $count) {
-    var file = q.filepath;
-    var patterns = _.flattenDeep([pattern]);
-    var isReplace = String($isReplace);
+    const file = q.filepath;
+    const patterns = _.flattenDeep([pattern]);
+    const isReplace = String($isReplace);
     assert(isReplace === 'true' || isReplace === 'false', ' => Boolean to string conversion failed.');
-    var priority = 0;
+    let priority = 0;
     if (q.priority) {
-        var ind = q._priority.priorityCycleIndex++;
-        var cycleNumber_1 = ind % q._priority.totalPriorityCycles;
-        var accumulatedValue_1 = 0;
+        const ind = q._priority.priorityCycleIndex++;
+        const cycleNumber = ind % q._priority.totalPriorityCycles;
+        let accumulatedValue = 0;
         q._priority.levels.every(function (obj) {
-            accumulatedValue_1 += obj.cycles;
-            if (cycleNumber_1 <= accumulatedValue_1) {
+            accumulatedValue += obj.cycles;
+            if (cycleNumber <= accumulatedValue) {
                 priority = obj.level;
                 return false;
             }
@@ -26,18 +26,18 @@ module.exports = function sed(q, pattern, $isReplace, $count) {
     if (patterns.length < 1) {
         patterns.push('\\S+');
     }
-    return rxjs_1.Observable.create(function (obs) {
+    return rxjs_1.Observable.create(obs => {
         process.nextTick(function () {
-            var count = $count || 1;
-            var prioritySearchCap = 20;
-            var data = rpl.run(file, patterns, isReplace, count, priority, prioritySearchCap);
-            var d = {
+            const count = $count || 1;
+            const prioritySearchCap = 20;
+            const data = rpl.run(file, patterns, isReplace, count, priority, prioritySearchCap);
+            const d = {
                 file: file,
                 pattern: pattern,
                 isReplace: isReplace,
                 count: count
             };
-            var ret = data.map(function (l) {
+            const ret = data.map(function (l) {
                 try {
                     return JSON.parse(String(l).trim());
                 }

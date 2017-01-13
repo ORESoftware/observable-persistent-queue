@@ -366,6 +366,7 @@ export class Queue extends QProto {
             // .takeUntil(this.isNotEmpty())
             // .takeWhile(this.isNotEmpty())
             // .startWith(0)
+            .takeUntil(this.isEmpty(emptyObs))
             .flatMap(() => {
                 return this.init();
             })
@@ -397,7 +398,7 @@ export class Queue extends QProto {
                 const force = !String(e.stack || e).match(/acquire lock timed out/);
                 return releaseLock(this, force);
             })
-            .takeUntil(this.isEmpty(emptyObs));
+            // .takeUntil(this.isEmpty(emptyObs));
 
 
         if (isConnect) {
@@ -446,10 +447,10 @@ export class Queue extends QProto {
                 ' but this queue was not initialized as a priority queue.');
 
             let il = this._priority.internalLevels;
-            const highestLevel = il[0];
-            assert(Number.isInteger(priority),
-                ' => Priority option must be an integer, between 1 and ' + highestLevel + ', inclusive.');
-
+            const highestLevel = il[il.length - 1];
+            assert(Number.isInteger(priority) && priority >= 1 && priority <= highestLevel,
+                ' => Given the initial settings of this queue, ' + //
+                'priority option must be an integer, between 1 and ' + highestLevel + ', inclusive.')
         }
 
 

@@ -37,9 +37,7 @@ https://www.typescriptlang.org/docs/handbook/compiler-options.html
   => tail spawn stderr =>
  tail: inotify cannot be used, reverting to polling: Too many open files
 
-
  http://tutorialzine.com/2016/07/learn-typescript-in-30-minutes/
-
 
  https://github.com/zloirock/core-js#basic
 
@@ -66,3 +64,6 @@ https://www.typescriptlang.org/docs/handbook/compiler-options.html
      "node_modules",
      "./dist"
    ]
+
+
+file issue with RxJS regarding errors thrown in subscribe next() etc.

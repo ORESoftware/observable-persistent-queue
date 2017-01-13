@@ -1,98 +1,58 @@
 'use strict';
-
-//core
-import util = require('util');
-import fs = require('fs');
-import path = require('path');
-import assert = require('assert');
-import cp = require('child_process');
-import EE = require('events');
-
-//npm
-import Rx = require('rxjs');
-import _ = require('lodash');
-import uuidV4 = require('uuid/v4');
-import colors = require('colors/safe');
-import {Observable} from 'rxjs/Rx';
-
-//project
-import sed = require('./sed');
-import _countLines = require('./count-lines');
-import {Queue} from "./queue";
-import {QProto} from "./queue-proto";
+const util = require("util");
+const fs = require("fs");
+const assert = require("assert");
+const cp = require("child_process");
+const Rx = require("rxjs");
+const _ = require("lodash");
+const uuidV4 = require("uuid/v4");
+const colors = require("colors/safe");
+const Rx_1 = require("rxjs/Rx");
+const sed = require("./sed");
+const _countLines = require("./count-lines");
 const debug = require('debug')('cmd-queue');
-
-import {
-
-    IBackpressureObj,
-    IGenericObservable,
-    IClientCount
-
-}
-    from "./object-interfaces";
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-
 const start = Date.now();
 let drainLocks = 0;
 let drainUnlocks = 0;
 let releaseLockCount = 0;
 let acquireLockCount = 0;
 let count = 0;
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-// TODO: http://askubuntu.com/questions/509881/tail-reading-an-entire-file-and-then-following
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-export function makeEEObservable(q: Queue, ee: EE, opts: IGenericObservable): Observable<any> {
-
+function makeEEObservable(q, ee, opts) {
     opts = opts || {};
     const isCallCompleted = opts.isCallCompleted;
     const isPublish = opts.isPublish;
-
-    let obs = Observable.create(obs => {
-
+    let obs = Rx_1.Observable.create(obs => {
         if (q.isReady) {
-            // this seemingly superfluous check prevents race conditions in the case that
-            // the "executor" function is not called synchronously
             obs.next();
-            if (true || isCallCompleted) {
+            if (isCallCompleted) {
                 obs.complete();
             }
         }
         else {
             ee.once('error', function (err) {
-                obs.error(err)
+                obs.error(err);
             });
             ee.once('ready', function () {
                 obs.next();
-                if (true || isCallCompleted) {
+                if (isCallCompleted) {
                     obs.complete();
                 }
             });
         }
-
         return function () {
-            // console.log(' => ee observable disposed.');
-        }
+        };
     });
-
     if (isPublish) {
         obs = obs.publish().refCount();
     }
     return obs;
 }
-
-export function makeGenericObservable(fn?: Function, opts?: IGenericObservable): Observable<any> {
-
+exports.makeEEObservable = makeEEObservable;
+function makeGenericObservable(fn, opts) {
     opts = opts || {};
     const isCallCompleted = opts.isCallCompleted;
     const isPublish = opts.isPublish;
-
-    let obs = Observable.create(obs => {
+    let obs = Rx_1.Observable.create(obs => {
         if (fn) {
             fn(function (err, val) {
                 if (err) {
@@ -100,83 +60,65 @@ export function makeGenericObservable(fn?: Function, opts?: IGenericObservable):
                 }
                 else {
                     obs.next(val);
-                    if (true || isCallCompleted) {
+                    if (isCallCompleted) {
                         obs.complete();
                     }
-
                 }
             });
         }
         else {
             process.nextTick(function () {
                 obs.next();
-                if (true || isCallCompleted) {
+                if (isCallCompleted) {
                     obs.complete();
                 }
             });
         }
-
     });
-
     if (isPublish) {
         obs = obs.publish().refCount();
     }
     return obs;
 }
-
-
-export function countLines(q: Queue, pattern?: string): Observable<any> {
+exports.makeGenericObservable = makeGenericObservable;
+function countLines(q, pattern) {
     return _countLines(q.fp, pattern);
 }
-
-
-export function findFirstLine(q: Queue, pattern?: string): Observable<any> {
-
+exports.countLines = countLines;
+function findFirstLine(q, pattern) {
     pattern = pattern || '\\S+';
-
     const count = 1;
-
     return sed(q, pattern, false, count)
         .map(data => {
-            return data[0];
-        });
+        return data[0];
+    });
 }
-
-
-export function removeOneLine(q: Queue, pattern?: string): Observable<any> {
-
+exports.findFirstLine = findFirstLine;
+function removeOneLine(q, pattern) {
     pattern = pattern || '\\S+';
-
     const count = 1;
-
     return sed(q, pattern, true, count)
         .map(data => {
-            if (data.length > 1) {
-                console.error(colors.red(' => OPQ Implementation Warning => ' +
-                    'removeOneLine data had a length greater than 1.'));
-            }
-            return data[0];
-        });
+        if (data.length > 1) {
+            console.error(colors.red(' => OPQ Implementation Warning => ' +
+                'removeOneLine data had a length greater than 1.'));
+        }
+        return data[0];
+    });
 }
-
-
-export function removeMultipleLines(q: QProto, pattern?: string, count?: any): Observable<any> {
-
+exports.removeOneLine = removeOneLine;
+function removeMultipleLines(q, pattern, count) {
     return sed(q, pattern, true, count)
         .map(data => {
-            assert(Array.isArray(data),
-                ' => Implementation error => data should be in an array format.');
-            return data;
-        });
-
+        assert(Array.isArray(data), ' => Implementation error => data should be in an array format.');
+        return data;
+    });
 }
-
-export function writeFile(q: Queue, data?: string): Observable<any> {
-
+exports.removeMultipleLines = removeMultipleLines;
+function writeFile(q, data) {
     const filePath = q.fp;
     data = data || '';
-
-    return Observable.create(obs => {
+    return Rx_1.Observable.create(obs => {
         fs.writeFile(filePath, data, err => {
             if (err) {
                 obs.error(err);
@@ -186,29 +128,19 @@ export function writeFile(q: Queue, data?: string): Observable<any> {
                 obs.complete();
             }
         });
-
         return function () {
-            // console.log('disposing appendFile()');
-        }
+        };
     });
-
 }
-
-
-export function appendFile(q: QProto, $lines: Array<string> | string, priority: number): Observable<any> {
-
+exports.writeFile = writeFile;
+function appendFile(q, $lines, priority) {
     const filePath = q.fp;
     assert(Number.isInteger(priority), ' => Implementation error => "priority" must be an integer.');
-
-    let lines : Array<string> = _.flattenDeep([$lines]);
-
-    //ensure new line separation
+    let lines = _.flattenDeep([$lines]);
     lines = lines.map(function (l) {
-
         assert.equal(typeof l, 'string');
         assert(!l.match(/:/), ' => Usage error => You cannot use colon characters in your queue messages, ' +
             'as OPQ uses colons to easily delineate JSON.');
-
         return JSON.stringify({
             line: l,
             dateCreated: new Date().toISOString(),
@@ -217,13 +149,9 @@ export function appendFile(q: QProto, $lines: Array<string> | string, priority: 
             priority: priority,
         });
     });
-
-    // const data = '\n' + lines.join('\n') + '\n';
-
     const data = lines.join('\n') + '\n';
-
-    return Observable.create(obs => {
-        fs.appendFile(filePath, data, {flag: 'a'}, err => {
+    return Rx_1.Observable.create(obs => {
+        fs.appendFile(filePath, data, { flag: 'a' }, err => {
             if (err) {
                 obs.error(err);
             }
@@ -232,16 +160,13 @@ export function appendFile(q: QProto, $lines: Array<string> | string, priority: 
                 obs.complete();
             }
         });
-
         return function () {
-
-        }
+        };
     });
-
 }
-
-export function delayObservable(delay?: number, isCompleted?: boolean): Observable<any> {
-    return Observable.create(obs => {
+exports.appendFile = appendFile;
+function delayObservable(delay, isCompleted) {
+    return Rx_1.Observable.create(obs => {
         setTimeout(function () {
             obs.next();
             if (isCompleted) {
@@ -250,31 +175,23 @@ export function delayObservable(delay?: number, isCompleted?: boolean): Observab
         }, delay || 100);
     });
 }
-
-export function ifFileExistAndIsAllWhiteSpaceThenTruncate(q: Queue): Observable<any> {
-
+exports.delayObservable = delayObservable;
+function ifFileExistAndIsAllWhiteSpaceThenTruncate(q) {
     return readFile(q)
         .flatMap(data => {
-            if (data) {
-                return makeGenericObservable();
-            }
-            else {
-                // if not data, then we truncate file
-                return writeFile(q);
-            }
-        });
-
+        if (data) {
+            return makeGenericObservable();
+        }
+        else {
+            return writeFile(q);
+        }
+    });
 }
-
-
-export function genericAppendFile(q: Queue, data: any): Observable<any> {
-
+exports.ifFileExistAndIsAllWhiteSpaceThenTruncate = ifFileExistAndIsAllWhiteSpaceThenTruncate;
+function genericAppendFile(q, data) {
     const d = data || '';
     const fp = q.filepath;
-
-    return Observable.create(obs => {
-        // try to open file for reading and writing
-        // fs.writeFile(fp, d, {flag: 'w+'}, err => {
+    return Rx_1.Observable.create(obs => {
         fs.appendFile(fp, d, {}, err => {
             if (err) {
                 console.log(' => OPQ append file error => ', err.stack);
@@ -285,43 +202,27 @@ export function genericAppendFile(q: Queue, data: any): Observable<any> {
                 obs.complete();
             }
         });
-
         return function () {
-            // console.log('disposing genericAppendFile()');
-        }
+        };
     });
 }
-
-export function acquireLockRetry(q: QProto, obj: any): Observable<any> {
-
+exports.genericAppendFile = genericAppendFile;
+function acquireLockRetry(q, obj) {
     if (!obj.error) {
         return makeGenericObservable(null, null)
             .map(() => obj);
     }
-
     console.log('\n\n', colors.red.bold(' => need to retry acquiring lock.'), '\n\n');
-
-    return Observable.interval(1500)
-        .takeUntil(
-            // take until either the timeout occurs or we actually acquire the lock
-            Observable.race(
-                acquireLock(q, obj.name)
-                    .filter(obj => !obj.error),
-
-                Observable.timer(3600)
-                    .flatMap(() => {
-                        return Rx.Observable.throw(' => Rx.Observable.throw => acquire lock timed out')
-                    })
-            )
-        )
-
+    return Rx_1.Observable.interval(1500)
+        .takeUntil(Rx_1.Observable.race(acquireLock(q, obj.name)
+        .filter(obj => !obj.error), Rx_1.Observable.timer(3600)
+        .flatMap(() => {
+        return Rx.Observable.throw(' => Rx.Observable.throw => acquire lock timed out');
+    })));
 }
-
-
-export function backpressure(q: Queue, val: IBackpressureObj, fn: Function): Observable<any> {
-
-    return Observable.create(sub => {
-
+exports.acquireLockRetry = acquireLockRetry;
+function backpressure(q, val, fn) {
+    return Rx_1.Observable.create(sub => {
         fn.call(sub, function (err, ret) {
             if (err) {
                 sub.error(err);
@@ -333,19 +234,14 @@ export function backpressure(q: Queue, val: IBackpressureObj, fn: Function): Obs
                 });
             }
         });
-
         return function () {
-
-        }
+        };
     });
 }
-
-
-export function readFile$(q: QProto): Observable<any> {
-
+exports.backpressure = backpressure;
+function readFile$(q) {
     const fp = q.filepath;
-
-    return Observable.create(obs => {
+    return Rx_1.Observable.create(obs => {
         fs.readFile(fp, 'utf8', function (err, data) {
             if (err) {
                 console.log('errrror => ', err.stack);
@@ -355,41 +251,29 @@ export function readFile$(q: QProto): Observable<any> {
                 obs.next(data);
                 obs.complete();
             }
-
         });
         return function () {
-            // console.log('disposing readFile()');
-        }
+        };
     });
 }
-
-
-export function readFile(q: Queue): Observable<any> {
-
+exports.readFile$ = readFile$;
+function readFile(q) {
     const fp = q.filepath;
-
-    return Observable.create(obs => {
-
+    return Rx_1.Observable.create(obs => {
         const n = cp.spawn('grep', ['-m', '1', '-E', '\\S+', fp]);
-
         let data = '';
         n.stdout.setEncoding('utf8');
         n.stderr.setEncoding('utf8');
-
         n.stdout.on('data', d => {
             data += String(d);
         });
-
         n.stderr.on('data', function (d) {
             console.error(colors.bgRed(' => grep error => '), String(d));
         });
-
         n.once('close', function (code) {
-
             n.stderr.removeAllListeners();
             n.stdout.removeAllListeners();
             n.removeAllListeners();
-
             if (code > 1) {
                 console.error(colors.red(' => grep exit code is greater than 0 => '), code, ' => stdout => ', '"' + data + '"');
                 obs.error({
@@ -397,135 +281,98 @@ export function readFile(q: Queue): Observable<any> {
                 });
             }
             else {
-
                 if (data) {
                     console.log('\n', colors.blue(' => data is as data do => '), '\n', data);
                 }
-
                 obs.next(data);
                 obs.complete();
-
             }
-
         });
-
         return function () {
-
-        }
-
+        };
     });
-
 }
-
-
-export function waitForClientCount(q: QProto, opts: any): Observable<any> {
-
+exports.readFile = readFile;
+function waitForClientCount(q, opts) {
     opts = opts || {};
     const count = opts.count || 5;
     const timeout = opts.timeout || 3000;
     const index = opts.index;
-
     return q.obsClient.bufferCount(count)
         .flatMap(value => {
-
-            const first = value.shift();
-            const last = value[value.length - 1];
-
-            if (opts.index > 3 || (last.clientCount - first.clientCount < 2)) {
-                return Observable.timer(10)
-            }
-            else {
-                opts.index = opts.index || 0;
-                opts.index++;
-                return waitForClientCount.apply(null, [q, opts]);
-            }
-
-        });
+        const first = value.shift();
+        const last = value[value.length - 1];
+        if (opts.index > 3 || (last.clientCount - first.clientCount < 2)) {
+            return Rx_1.Observable.timer(10);
+        }
+        else {
+            opts.index = opts.index || 0;
+            opts.index++;
+            return waitForClientCount.apply(null, [q, opts]);
+        }
+    });
 }
-
-
-export function acquireLock(q: QProto, name: string): Observable<any> {
-
+exports.waitForClientCount = waitForClientCount;
+function acquireLock(q, name) {
     const lock = q.lock;
     const client = q.client;
-
     if (typeof name !== 'string') {
         throw new Error(' => OPQ implementation error => no name for mutex append.');
     }
-
-    return Observable.create(obs => {
-
-        client.lock(lock, {append: name}, function (err, unlock, id) {
+    return Rx_1.Observable.create(obs => {
+        client.lock(lock, { append: name }, function (err, unlock, id) {
             if (err) {
                 console.error('\n\n', ' => Error acquiring lock => \n', (err.stack || err));
             }
             else {
                 acquireLockCount++;
-
                 if (String(name).startsWith('<drain')) {
                     drainLocks++;
                     debug('\n\n', 'drain locks/unlocks (locking) => ', drainLocks, drainUnlocks, '\n\n');
                 }
             }
-
             debug(util.inspect({
                 acquireLockCount: acquireLockCount,
                 releaseLockCount: releaseLockCount
             }));
-
             obs.next({
                 error: err ? (err.stack || err) : undefined,
                 id: id,
                 name: name
             });
-
             obs.complete();
-
         });
-
         return function () {
-            // console.log('disposing acquireLock()');
-        }
+        };
     });
 }
-
-export function releaseLock(q: QProto, lockUuid: string | boolean): Observable<any> {
-
+exports.acquireLock = acquireLock;
+function releaseLock(q, lockUuid) {
     const client = q.client;
-
     if (!lockUuid) {
         console.error('\n\n', new Error('Cannot release lock without force or proper uuid.').stack, '\n\n');
-        return Observable.throw('Cannot release lock without force or proper uuid.\n\n');
+        return Rx_1.Observable.throw('Cannot release lock without force or proper uuid.\n\n');
     }
-
     if (String(lockUuid).startsWith('<drain')) {
         drainUnlocks++;
         debug('\n\n', 'drain locks/unlocks => ', drainLocks, drainUnlocks, '\n\n');
     }
-
-    return Observable.create(obs => {
-
+    return Rx_1.Observable.create(obs => {
         const lock = q.lock;
-
         client.unlock(lock, lockUuid, function (err) {
-
             if (err) {
                 console.error('\n', ' => Release lock error => ', '\n', err.stack || err);
             }
             else {
                 releaseLockCount++;
             }
-
             obs.next({
                 error: err ? (err.stack || err) : undefined
             });
-
             obs.complete();
-
         });
-
         return function () {
-            // console.log('disposing releaseLock()');
-        }
+        };
     });
 }
+exports.releaseLock = releaseLock;

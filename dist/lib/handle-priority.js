@@ -1,19 +1,19 @@
 'use strict';
-var assert = require("assert");
-var util = require("util");
-var priorityMaxSearchMin = 5;
-var priorityMaxSearchMax = 300;
+const assert = require("assert");
+const util = require("util");
+const priorityMaxSearchMin = 5;
+const priorityMaxSearchMax = 300;
 module.exports = function (obj, q) {
     q.priority = obj.priority;
     assert(typeof q.priority === 'object' && !Array.isArray(q.priority), ' => OPQ usage error => "priority option should be an object.');
     q._priority = {};
-    var first = q.priority.first;
+    const first = q.priority.first;
     assert(Number.isInteger(first), ' => priority.first must be an integer, greater than 5 and less than 300');
     assert(first > 5 && first < 300, ' => priority.first must be an integer, greater than 5 and less than 300');
     assert.equal(Array.isArray(q.priority.levels), true, ' => priority.levels should be an array.');
     assert(q.priority.levels.length > 1, ' => You must define at least two priority levels.');
-    var il = q._priority.internalLevels = [];
-    q._priority.levels = q.priority.levels.sort(function (a, b) {
+    let il = q._priority.internalLevels = [];
+    q._priority.levels = q.priority.levels.sort((a, b) => {
         return b.level - a.level;
     });
     q._priority.first = first;

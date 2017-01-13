@@ -2,9 +2,11 @@
 
 //core
 import util = require('util');
+import EE = require('events');
 
 //npm
 import colors = require('colors/safe');
+import {Queue} from './queue';
 const debug = require('debug')('opq');
 
 //project
@@ -12,15 +14,15 @@ import tail = require('./tail');
 
 //////////////////////////////////////////////////////////////////////////////
 
-export = (queue: any, push: any, clientEE: any) => {
+export = (q: Queue, push: Function, clientEE: EE) => {
 
     clientEE.emit('ready');
-    queue.isReady = true;
-    const fp = queue.filepath;
+    q.isReady = true;
+    const fp = q.filepath;
 
     //start tailing, only after we know that the file exists, etc.
 
-    tail(fp).on('data', (data:any) => {
+    tail(fp).on('data', (data: any) => {
 
         debug('\n', colors.cyan(' => raw data (well, trimmed) from tail => '), '\n', String(data).trim());
 

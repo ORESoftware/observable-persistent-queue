@@ -57,9 +57,10 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
 
         Rx.Observable.interval(10)
             .take(30)
-            .map(function (val) {
+            .map(function () {
+                const p = Math.ceil(Math.random() * 4);
                 return q.enq('foo bar baz', {
-                    priority: val
+                    priority: p
                 });
             })
             .concatAll()
@@ -71,7 +72,7 @@ Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userDa
                 },
                 function (e) {
                     console.error(e);
-                    h.fail(e);
+                    h.fatal(e);
                 },
                 function () {
 

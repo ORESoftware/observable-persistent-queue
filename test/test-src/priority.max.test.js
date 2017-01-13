@@ -73,7 +73,7 @@ Test.create(__filename, {},
                 .subscribe(
                     function (v) {
                         if (v.error) {
-                            console.log(colors.yellow.bold('next => '), v);
+                            console.log(colors.yellow.bold('next error => '), v);
                         }
 
                     },

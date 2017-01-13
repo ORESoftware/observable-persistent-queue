@@ -1,17 +1,13 @@
 'use strict';
-var cp = require("child_process");
-var colors = require("colors/safe");
-function unref(n) {
-    n.stderr.removeAllListeners();
-    n.stdout.removeAllListeners();
-    n.removeAllListeners();
-    n.unref();
-}
-module.exports = function (fp) {
-    var n = cp.spawn('tail', ['-F', '-n', '+1', fp]);
+const cp = require("child_process");
+const colors = require("colors/safe");
+module.exports = function (file) {
+    const n = cp.spawn('tail', ['-F', '-n', '+1', file]);
     n.on('error', function (err) {
         console.error('\n', colors.bgRed(' => spawn error => '), '\n', err.stack || err);
-        unref(n);
+        n.stderr.removeAllListeners();
+        n.stdout.removeAllListeners();
+        n.removeAllListeners();
     });
     n.stdout.setEncoding('utf8');
     n.stderr.setEncoding('utf8');
@@ -22,7 +18,9 @@ module.exports = function (fp) {
         n.kill();
     });
     n.on('close', function (code) {
-        unref(n);
+        n.stderr.removeAllListeners();
+        n.stdout.removeAllListeners();
+        n.removeAllListeners();
         console.error('\n', colors.bgRed(' => tail child process may have closed prematurely => '), code);
     });
     return n.stdout;

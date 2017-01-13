@@ -1,10 +1,10 @@
 'use strict';
-var util = require("util");
-var Rx = require("rxjs");
-var proto = Rx.Observable.prototype;
+const util = require("util");
+const Rx = require("rxjs");
+const proto = Rx.Observable.prototype;
 proto.backpressure = function (fn) {
-    var source = this;
-    return Rx.Observable.create(function (sub) {
+    const source = this;
+    return Rx.Observable.create(sub => {
         return source.subscribe(function onNext(val) {
             fn.call(sub, val.data, function (err, data) {
                 if (err) {

@@ -1,18 +1,18 @@
 'use strict';
-var assert = require("assert");
-var util = require("util");
-var priorityMaxSearchMin = 5;
-var priorityMaxSearchMax = 300;
+const assert = require("assert");
+const util = require("util");
+const priorityMaxSearchMin = 5;
+const priorityMaxSearchMax = 300;
 function makeInternalPriorityRepresentation($p) {
-    var p = {
+    const p = {
         first: $p.first,
         internalLevels: [],
         levels: [],
         totalPriorityCycles: null,
         priorityCycleIndex: null
     };
-    var il = p.internalLevels;
-    p.levels = $p.levels.sort(function (a, b) {
+    let il = p.internalLevels;
+    p.levels = $p.levels.sort((a, b) => {
         return b.level - a.level;
     });
     p.totalPriorityCycles = $p.levels.map(function (obj) {
@@ -32,9 +32,9 @@ function makeInternalPriorityRepresentation($p) {
     return p;
 }
 module.exports = function (obj, q) {
-    var p = q.priority = obj.priority;
+    const p = q.priority = obj.priority;
     assert(typeof q.priority === 'object' && !Array.isArray(q.priority), ' => OPQ usage error => "priority option should be an object.');
-    var first = q.priority.first;
+    const first = q.priority.first;
     assert(Number.isInteger(first), ' => priority.first must be an integer, greater than 5 and less than 300');
     assert(first > 5 && first < 300, ' => priority.first must be an integer, greater than 5 and less than 300');
     assert.equal(Array.isArray(q.priority.levels), true, ' => priority.levels should be an array.');

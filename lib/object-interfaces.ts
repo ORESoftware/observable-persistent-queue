@@ -34,8 +34,9 @@ export interface IDequeueOpts {
 
 export interface IPriorityLevel {
 
-    level: number,
-    cycles: number
+    level: number;
+    cycles: number;
+    depth?: number;
 
 }
 

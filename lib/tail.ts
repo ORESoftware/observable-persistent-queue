@@ -5,22 +5,28 @@ import cp = require('child_process');
 
 //npm
 import colors = require('colors/safe');
+import {ChildProcess} from "child_process";
 
 
 ///////////////////////////////////////////////////////////////
 
-export = function (file) {
+function unref(n: ChildProcess) {
+    n.stderr.removeAllListeners();
+    n.stdout.removeAllListeners();
+    n.removeAllListeners();
+    n.unref();
+}
 
-    const n = cp.spawn('tail', ['-F', '-n', '+1', file]);
+export = function (fp: string) {
+
+    const n = cp.spawn('tail', ['-F', '-n', '+1', fp]);
     // const n = cp.spawn('watch', ['tail', '-n', '+1', file]);
 
     n.on('error', function (err) {
 
         console.error('\n', colors.bgRed(' => spawn error => '), '\n', err.stack || err);
+        unref(n);
 
-        n.stderr.removeAllListeners();
-        n.stdout.removeAllListeners();
-        n.removeAllListeners();
     });
 
     n.stdout.setEncoding('utf8');
@@ -30,16 +36,13 @@ export = function (file) {
         console.error('\n', colors.bgRed.white.bold(' => tail spawn stderr => '), '\n', String(d));
     });
 
-    process.once('exit', function(){
+    process.once('exit', function () {
         n.kill();
     });
 
-    n.on('close', function(code){
+    n.on('close', function (code) {
 
-        n.stderr.removeAllListeners();
-        n.stdout.removeAllListeners();
-        n.removeAllListeners();
-
+        unref(n);
         console.error('\n', colors.bgRed(' => tail child process may have closed prematurely => '), code);
     });
 
