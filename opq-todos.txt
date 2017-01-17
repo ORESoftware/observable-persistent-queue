@@ -30,12 +30,8 @@ http://rxmarbles.com/#scan
 
 https://github.com/ReactiveX/rxjs/blob/master/doc/operator-creation.md
 
-convert this to TS before converting suman to TS
 
 https://www.typescriptlang.org/docs/handbook/compiler-options.html
-
-  => tail spawn stderr =>
- tail: inotify cannot be used, reverting to polling: Too many open files
 
  http://tutorialzine.com/2016/07/learn-typescript-in-30-minutes/
 
@@ -66,4 +62,8 @@ https://www.typescriptlang.org/docs/handbook/compiler-options.html
    ]
 
 
-file issue with RxJS regarding errors thrown in subscribe next() etc.
+https://blog.thoughtram.io/angular/2016/06/16/cold-vs-hot-observables.html
+
+https://www.manning.com/books/rxjs-in-action?a_aid=latenciofpjs&a_bid=36041a09
+
+http://neversaw.us/2014/12/20/classifying-asynchrony/

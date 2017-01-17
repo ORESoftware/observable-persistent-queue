@@ -20,7 +20,7 @@ const debug = require('debug')('cmd-queue');
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-export = function sed(q: QProto, pattern: string | Array<string>, $isReplace: boolean, $count: number): Observable<any> {
+export = function sed(q: QProto, pattern: string | string[], $isReplace: boolean, $count: number): Observable<any> {
 
     const file : string = q.filepath;
     const patterns : Array<string> = _.flattenDeep([pattern]);

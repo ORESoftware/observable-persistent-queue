@@ -8,7 +8,7 @@ const util = require('util');
 const fs = require('fs');
 const colors = require('colors/safe');
 
-const Queue = require('../lib/queue');
+const Queue = require('../lib/queue.js').Queue;
 
 const q = new Queue({
     port: 8888,

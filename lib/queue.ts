@@ -46,9 +46,6 @@ process.on('warning', function (w) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//we could use console.time, but this is fine
-const start: number = Date.now();
-
 // helper functions
 const {
 
@@ -172,9 +169,10 @@ export class Queue extends QProto {
                 .flatMap((obj: any) => {
                     return releaseLock(this, obj.id);
 
-                }).map(() => {
-                    // currently just returns undefined
-                    return startTail(this, push, clientEE);
+                }).do(() => {
+                    clientEE.emit('ready');
+                    this.isReady = true;
+                    startTail(this, push);
                 })
                 .take(1)
                 .catch(e => {
@@ -247,10 +245,6 @@ export class Queue extends QProto {
             obs = new Rx.Subject();
         }
 
-        // process.nextTick(function () {
-        //     obs.next();
-        // });
-
         return obs
             .startWith(0)
             .flatMap(() => {
@@ -292,7 +286,7 @@ export class Queue extends QProto {
     isEmpty(obs: Subject<any>): Observable<any> {
 
         if (!obs) {
-            obs = new Subject();
+            obs = new Subject<any>();
 
             process.nextTick(function () {
                 obs.next();
@@ -363,9 +357,6 @@ export class Queue extends QProto {
         const emptyObs = new Rx.Subject();
 
         let $obs = obs
-            // .takeUntil(this.isNotEmpty())
-            // .takeWhile(this.isNotEmpty())
-            // .startWith(0)
             .takeUntil(this.isEmpty(emptyObs))
             .flatMap(() => {
                 return this.init();
@@ -376,7 +367,7 @@ export class Queue extends QProto {
                         return acquireLockRetry(this, obj)
                     });
             })
-            .flatMap((obj:any) => {
+            .flatMap((obj: any) => {
                 return removeOneLine(this)
                     .flatMap(l => {
                         return releaseLock(this, obj.id)
@@ -397,8 +388,7 @@ export class Queue extends QProto {
                 console.error('\n', ' => isEmpty() error => \n', e.stack || e);
                 const force = !String(e.stack || e).match(/acquire lock timed out/);
                 return releaseLock(this, force);
-            })
-            // .takeUntil(this.isEmpty(emptyObs));
+            });
 
 
         if (isConnect) {
@@ -410,7 +400,7 @@ export class Queue extends QProto {
 
     }
 
-    isPriorityQueue() : boolean {
+    isPriorityQueue(): boolean {
         return this.priority && this._priority && true;
     }
 
@@ -424,7 +414,7 @@ export class Queue extends QProto {
     }
 
     getSize(): Observable<any> {
-        return countLines(this, null);
+        return countLines(this);
     }
 
 

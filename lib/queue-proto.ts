@@ -76,7 +76,7 @@ export abstract class QProto {
         this.client && this.client.close();
     }
 
-    _enqControlled(lines: string | Array<string>, opts: IEnqueueOpts) {
+    _enqControlled(lines: string | string[], opts: IEnqueueOpts) {
 
         opts = opts || {};
 

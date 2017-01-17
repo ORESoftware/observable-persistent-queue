@@ -12,15 +12,25 @@ const debug = require('debug')('opq');
 //project
 import tail = require('./tail');
 
+
 //////////////////////////////////////////////////////////////////////////////
 
-export = (q: Queue, push: Function, clientEE: EE) => {
+let callable = true;
 
-    clientEE.emit('ready');
-    q.isReady = true;
+//////////////////////////////////////////////////////////////////////////////
+
+export = (q: Queue, push: Function) => {
+
     const fp = q.filepath;
 
     //start tailing, only after we know that the file exists, etc.
+
+    if(!callable){
+        return;
+    }
+
+    // we just want call this code once per runtime
+    callable = false;
 
     tail(fp).on('data', (data: any) => {
 
