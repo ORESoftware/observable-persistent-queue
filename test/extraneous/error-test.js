@@ -5,23 +5,18 @@
 
 const Rx = require('rxjs/Rx');
 
-process.on('uncaughtException', function(e){
-    console.error(' => uncaught exception => ', e.stack || e);
-});
-
-
-Rx.Observable.timer(100)
-    .flatMap(() => {
-        throw 'chuck';
-    })
-    .subscribe(
-        function onNext() {
-
-        },
-        function onError(e) {
-            throw new Error('holodays' + (e.stack || e));
-        },
-        function onComplete() {
-
-        }
-    );
+Rx.Observable.from([1,2,3,4])
+.filter(function(i){
+    return i < 4;
+})
+.subscribe(
+    function onNext(v) {
+        console.log('next => ', v);
+    },
+    function onError(e) {
+        throw e;
+    },
+    function onComplete() {
+        console.log('complete');
+    }
+);

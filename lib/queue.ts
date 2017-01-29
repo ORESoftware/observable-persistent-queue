@@ -123,10 +123,27 @@ export class Queue extends QProto {
         let obsClient = this.obsClient = new Subject<any>();
         const clientEE = new EE().setMaxListeners(200);
 
+        let opqId = 0;
+
+        this.clientStream = Observable.create(sub => {
+
+            const push = Subscriber.create(v => {
+
+                if (push === obsClient.observers[0]) {
+                    sub.next(v);
+                }
+            });
+
+            push.opqId = opqId++;
+
+            return obsClient.subscribe(push);
+        });
+
         function onClientConnectionChange(clientCount) {
+            // console.log(' => client count => ', clientCount);
             obsClient.next({
                 time: Date.now(),
-                clientCount: clientCount
+                clientCount
             });
         }
 
@@ -144,7 +161,7 @@ export class Queue extends QProto {
 
             callable = false;
 
-            const promise = lmUtils.launchBrokerInChildProcess({port,detached:true});
+            const promise = lmUtils.launchBrokerInChildProcess({port, detached: true});
 
             return Observable.fromPromise(promise)
                 .flatMap(() => {

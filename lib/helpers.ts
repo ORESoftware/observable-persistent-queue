@@ -52,24 +52,24 @@ export function makeEEObservable(q: Queue, ee: EE, opts: IGenericObservable): Ob
     const isCallCompleted = opts.isCallCompleted;
     const isPublish = opts.isPublish;
 
-    let obs = Observable.create(obs => {
+    let obs = Observable.create(sub => {
 
         if (q.isReady) {
             // this seemingly superfluous check prevents race conditions in the case that
             // the "executor" function is not called synchronously
-            obs.next();
+            sub.next();
             if (true || isCallCompleted) {
-                obs.complete();
+                sub.complete();
             }
         }
         else {
             ee.once('error', function (err) {
-                obs.error(err)
+                sub.error(err)
             });
             ee.once('ready', function () {
-                obs.next();
+                sub.next();
                 if (true || isCallCompleted) {
-                    obs.complete();
+                    sub.complete();
                 }
             });
         }
@@ -91,16 +91,16 @@ export function makeGenericObservable(fn?: Function, opts?: IGenericObservable):
     const isCallCompleted = opts.isCallCompleted;
     const isPublish = opts.isPublish;
 
-    let obs = Observable.create(obs => {
+    let obs = Observable.create(sub => {
         if (fn) {
             fn(function (err, val) {
                 if (err) {
-                    obs.error(err);
+                    sub.error(err);
                 }
                 else {
-                    obs.next(val);
+                    sub.next(val);
                     if (true || isCallCompleted) {
-                        obs.complete();
+                        sub.complete();
                     }
 
                 }
@@ -108,9 +108,9 @@ export function makeGenericObservable(fn?: Function, opts?: IGenericObservable):
         }
         else {
             process.nextTick(function () {
-                obs.next();
+                sub.next();
                 if (true || isCallCompleted) {
-                    obs.complete();
+                    sub.complete();
                 }
             });
         }
@@ -175,14 +175,14 @@ export function writeFile(q: Queue, data?: string): Observable<any> {
     const filePath = q.fp;
     data = data || '';
 
-    return Observable.create(obs => {
+    return Observable.create(sub => {
         fs.writeFile(filePath, data, err => {
             if (err) {
-                obs.error(err);
+                sub.error(err);
             }
             else {
-                obs.next();
-                obs.complete();
+                sub.next();
+                sub.complete();
             }
         });
 
@@ -199,7 +199,7 @@ export function appendFile(q: QProto, $lines: Array<string> | string, priority: 
     const filePath = q.fp;
     assert(Number.isInteger(priority), ' => Implementation error => "priority" must be an integer.');
 
-    let lines : Array<string> = _.flattenDeep([$lines]);
+    let lines: Array<string> = _.flattenDeep([$lines]);
 
     //ensure new line separation
     lines = lines.map(function (l) {
@@ -221,14 +221,14 @@ export function appendFile(q: QProto, $lines: Array<string> | string, priority: 
 
     const data = lines.join('\n') + '\n';
 
-    return Observable.create(obs => {
+    return Observable.create(sub => {
         fs.appendFile(filePath, data, {flag: 'a'}, err => {
             if (err) {
-                obs.error(err);
+                sub.error(err);
             }
             else {
-                obs.next(lines);
-                obs.complete();
+                sub.next(lines);
+                sub.complete();
             }
         });
 
@@ -240,11 +240,11 @@ export function appendFile(q: QProto, $lines: Array<string> | string, priority: 
 }
 
 export function delayObservable(delay?: number, isCompleted?: boolean): Observable<any> {
-    return Observable.create(obs => {
+    return Observable.create(sub => {
         setTimeout(function () {
-            obs.next();
+            sub.next();
             if (isCompleted) {
-                obs.complete();
+                sub.complete();
             }
         }, delay || 100);
     });
@@ -271,17 +271,17 @@ export function genericAppendFile(q: Queue, data: any): Observable<any> {
     const d = data || '';
     const fp = q.filepath;
 
-    return Observable.create(obs => {
+    return Observable.create(sub => {
         // try to open file for reading and writing
         // fs.writeFile(fp, d, {flag: 'w+'}, err => {
         fs.appendFile(fp, d, {}, err => {
             if (err) {
                 console.log(' => OPQ append file error => ', err.stack);
-                obs.error(err);
+                sub.error(err);
             }
             else {
-                obs.next();
-                obs.complete();
+                sub.next();
+                sub.complete();
             }
         });
 
@@ -420,26 +420,47 @@ export function readFile(q: Queue): Observable<any> {
 export function waitForClientCount(q: QProto, opts: any): Observable<any> {
 
     opts = opts || {};
-    const count = opts.count || 5;
+    const count = opts.count || 10;
     const timeout = opts.timeout || 3000;
-    const index = opts.index;
+    const tries = opts.tries || 5;
+    const diff = opts.diff || 5;
 
-    return q.obsClient.bufferCount(count)
-        .flatMap(value => {
+    let index = 0;
 
-            const first = value.shift();
+    return q.clientStream.bufferCount(count)
+        .filter(value => {
+
+            index++;
+
+            const first = value[0];
             const last = value[value.length - 1];
 
-            if (opts.index > 3 || (last.clientCount - first.clientCount < 2)) {
-                return Observable.timer(10)
-            }
-            else {
-                opts.index = opts.index || 0;
-                opts.index++;
-                return waitForClientCount.apply(null, [q, opts]);
+            console.log(first,last);
+
+            if (last.clientCount < 10) {
+                console.log(' client count is less than 10.');
+                return true;
             }
 
-        });
+            if (index >= tries) {
+                // we have tried enough, have to let it through
+                console.log('try limit is reached must let through.');
+                return true;
+            }
+
+            // console.log('client diff:',diff);
+
+            if ((first.clientCount - last.clientCount) > diff) {
+                // client buildup is now reduced, so we can make more requests
+                console.log('count is less than diff, we let through.');
+                return true;
+            }
+
+            // console.log('condition not met in wait for client count.');
+            return false;
+
+        })
+        .take(1);
 }
 
 

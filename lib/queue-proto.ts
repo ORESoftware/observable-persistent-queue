@@ -18,7 +18,15 @@ import EE = require('events');
 import Client = require('live-mutex/client');
 import lmUtils = require('live-mutex/utils');
 import tail = require('./tail');
-import {IPriority, IPriorityInternal, IDequeueOpts, IQueueBuilder, IEnqueueOpts} from "./object-interfaces";
+
+import {
+    IPriority,
+    IPriorityInternal,
+    IDequeueOpts,
+    IQueueBuilder,
+    IEnqueueOpts
+}
+    from "./object-interfaces";
 
 
 const {
@@ -48,6 +56,7 @@ export abstract class QProto {
     obsEnqueue: Subject<any>;
     obsDequeue: Subject<any>;
     obsClient: Subject<any>;
+    clientStream: Observable<any>;
     queueStream: Observable<any>;
     priority: IPriority;
     _priority: IPriorityInternal;
@@ -61,16 +70,16 @@ export abstract class QProto {
 
     }
 
-    getLock() : string{
+    getLock(): string {
         return this.lock;
     }
 
 
-    getClient() : Client {
+    getClient(): Client {
         return this.client;
     }
 
-    close() : void {
+    close(): void {
         this.client && this.client.close();
     }
 
@@ -85,10 +94,10 @@ export abstract class QProto {
 
         let $add = this.init()
             .flatMap(() => {
-                return waitForClientCount(this, {timeout: 3000, count: 5, index: null})
+                return waitForClientCount(this, {timeout: 3000, count: 25, tries: 25})
             })
             .flatMap(() => {
-                return acquireLock(this, '[<enqControlled>]')
+                return acquireLock(this, '<enqControlled>')
                     .flatMap(obj => {
                         return acquireLockRetry(this, obj)
                     })
@@ -104,7 +113,8 @@ export abstract class QProto {
                 console.error('\n', ' => add / enqueue error => \n', err.stack || err);
                 const force = !String(err.stack || err).match(/acquire lock timed out/);
                 return releaseLock(this, force);
-            });
+            })
+            .take(1);
 
         if (isShare) {
             $add = $add.share();
@@ -140,7 +150,7 @@ export abstract class QProto {
                 return this.init();
             })
             .flatMap(() => {
-                return acquireLock(this, 'deqWait')
+                return acquireLock(this, '<deqWait>')
                     .flatMap(obj => {
                         return acquireLockRetry(this, obj)
                     });
@@ -180,7 +190,7 @@ export abstract class QProto {
                             // explicit for your pleasure
                             // since we did not get enough results, we must wait and retry for more
                             // we retry by fire obs.next() above, which re-calls this whole chain
-                            // this avoids real recursion for much safer and simpler stuff
+                            // this avoids more traditional recursion for much safer and simpler stuff
                             return false;
                         });
                 }
@@ -196,7 +206,7 @@ export abstract class QProto {
         if (isConnect) {
             // this is necessary, if the user does not call subscribe,
             // if the user does not want to auto-subscribe, they will have to pass in isConnect=false.
-            $dequeue  = $dequeue.publish();
+            $dequeue = $dequeue.publish();
             $dequeue.connect();
         }
 
