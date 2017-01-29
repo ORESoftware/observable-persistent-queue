@@ -1,5 +1,5 @@
 
-const Rx = require('rxjs');
+const Rx = require('rxjs/Rx');
 
 var example = Rx.Observable.of(
     Rx.Observable.timer(1),

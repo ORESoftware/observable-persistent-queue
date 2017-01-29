@@ -67,3 +67,8 @@ https://blog.thoughtram.io/angular/2016/06/16/cold-vs-hot-observables.html
 https://www.manning.com/books/rxjs-in-action?a_aid=latenciofpjs&a_bid=36041a09
 
 http://neversaw.us/2014/12/20/classifying-asynchrony/
+
+
+https://blog.risingstack.com/writing-native-node-js-modules/
+
+https://github.com/uWebSockets/uWebSockets

@@ -5,7 +5,7 @@ import readline = require('readline');
 import fs = require('fs');
 
 //npm
-import Rx = require('rxjs');
+import {Observable} from 'rxjs/Rx';
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -13,7 +13,7 @@ export = function(file: any, rgx: any){
 
     rgx = rgx || '\\S+';
 
-    return Rx.Observable.create(sub => {
+    return Observable.create(sub => {
 
         const rl = readline.createInterface({
             input: fs.createReadStream(file, {autoClose: true})

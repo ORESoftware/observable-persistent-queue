@@ -1,7 +1,7 @@
 'use strict';
 
 
-const Rx = require('rxjs');
+const Rx = require('rxjs/Rx');
 
 
 let countIn = 0;

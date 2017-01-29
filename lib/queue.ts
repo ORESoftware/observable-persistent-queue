@@ -7,7 +7,7 @@ import path = require('path');
 import assert = require('assert');
 
 //npm
-import Rx = require('rxjs');
+import {Subject, Observable, Subscriber} from 'rxjs/Rx';
 import _ = require('lodash');
 import uuidV4 = require('uuid/v4');
 import colors = require('colors/safe');
@@ -20,8 +20,6 @@ import lmUtils = require('live-mutex/utils');
 import {QProto} from './queue-proto';
 import handlePriority = require('./handle-priority');
 import startTail = require('./start-tail');
-import {Observable} from 'rxjs/Rx';
-import {Subject} from 'rxjs';
 import {IPriority, IPriorityInternal, IQueueBuilder, IDequeueOpts, IDrainOpts, IEnqueueOpts} from "./object-interfaces";
 
 
@@ -101,7 +99,7 @@ export class Queue extends QProto {
 
         this.queueStream = Observable.create(obs => {
 
-            const push = Rx.Subscriber.create(v => {
+            const push = Subscriber.create(v => {
                 if ((index % obsEnqueue.observers.length) === obsEnqueue.observers.indexOf(push)) {
                     obs.next(v);
                 }
@@ -123,9 +121,7 @@ export class Queue extends QProto {
         let callable = true;
 
         let obsClient = this.obsClient = new Subject<any>();
-        const clientEE = new EE();
-
-        clientEE.setMaxListeners(200);
+        const clientEE = new EE().setMaxListeners(200);
 
         function onClientConnectionChange(clientCount) {
             obsClient.next({
@@ -148,17 +144,24 @@ export class Queue extends QProto {
 
             callable = false;
 
-            const promise = lmUtils.conditionallyLaunchSocketServer({port: port});
+            const promise = lmUtils.launchBrokerInChildProcess({port,detached:true});
 
             return Observable.fromPromise(promise)
                 .flatMap(() => {
                     this.client = new Client({key: lck, port: port, listener: onClientConnectionChange});
-                    return acquireLock(this, 'init')
+                    console.log('clienting...');
+                    return Observable.fromPromise(this.client.ensure());
+                })
+                .flatMap(() => {
+                    console.log('acquiring lock...');
+                    return acquireLock(this, '<init>')
                         .flatMap(obj => {
+                            console.log('acquiring lock...retry');
                             return acquireLockRetry(this, obj)
                         });
                 })
                 .flatMap(obj => {
+                    console.log('genericAppendFile');
                     return genericAppendFile(this, '')
                         .map(() => obj)
                 })
@@ -185,9 +188,9 @@ export class Queue extends QProto {
     }
 
 
-    eqStream(pauser: Subject<any>, opts: any): Observable<any> {
+    eqStream(pauser?: Subject<any>, opts?: any): Observable<any> {
 
-        if (!(pauser instanceof Rx.Observable)) {
+        if (!(pauser instanceof Observable)) {
             opts = pauser || {};
             pauser = new Subject<any>();
         }
@@ -242,13 +245,14 @@ export class Queue extends QProto {
     isNotEmpty(obs?: Subject<any>): Observable<any> {
 
         if (!obs) {
-            obs = new Rx.Subject();
+            obs = new Subject();
         }
 
         return obs
             .startWith(0)
             .flatMap(() => {
-                return this.init(); // // when you call obs.next(), it should fire this chain again
+                // when you call obs.next(), it should fire this chain again
+                return this.init();
             })
             .flatMap(() => {
                 return acquireLock(this, '<isEmpty>')
@@ -311,7 +315,7 @@ export class Queue extends QProto {
                             .map(() => {
                                 return l;
                             });
-                    });
+                    })
             })
             .filter(l => {
                 // filter out any lines => only fire event if there is no line
@@ -354,7 +358,7 @@ export class Queue extends QProto {
             obs.next();
         });
 
-        const emptyObs = new Rx.Subject();
+        const emptyObs = new Subject();
 
         let $obs = obs
             .takeUntil(this.isEmpty(emptyObs))

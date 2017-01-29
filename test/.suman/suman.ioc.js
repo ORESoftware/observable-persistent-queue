@@ -16,7 +16,7 @@ module.exports = data => {
         //the following are examples
 
         Rx: function(){
-           return require('rxjs');
+           return require('rxjs/Rx');
         },
 
         Queue: function(){

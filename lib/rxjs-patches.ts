@@ -3,8 +3,8 @@
 //core
 import util = require('util');
 
-import Rx = require('rxjs');
-const proto = <any> Rx.Observable.prototype;
+import {Observable} from 'rxjs/Rx';
+const proto = <any> Observable.prototype;
 
 ///////////////////////////////////////////////
 
@@ -12,7 +12,7 @@ proto.backpressure = function(fn){
 
   const source = this;
 
-  return Rx.Observable.create(sub => {
+  return Observable.create(sub => {
 
       return source.subscribe(
           function onNext(val){

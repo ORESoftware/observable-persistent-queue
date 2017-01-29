@@ -7,12 +7,10 @@ import path = require('path');
 import assert = require('assert');
 
 //npm
-import Rx = require('rxjs');
+import {Observable, Subject} from 'rxjs/Rx';
 import _ = require('lodash');
 import uuidV4 = require('uuid/v4');
 import colors = require('colors/safe');
-import {Observable} from 'rxjs';
-import {Subject} from 'rxjs';
 
 //project
 const debug = require('debug')('cmd-queue');

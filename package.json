@@ -2,7 +2,7 @@
   "name": "observable-persistent-queue",
   "version": "0.0.1001",
   "description": "Create a persistent message queue stored in a local text file",
-  "main": "dist/lib/queue.js",
+  "main": "dist/queue.js",
   "scripts": {
     "test": "./test.sh"
   },

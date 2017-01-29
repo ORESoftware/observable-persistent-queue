@@ -8,11 +8,9 @@ import assert = require('assert');
 
 //npm
 import rpl = require('replace-line');
-import Rx = require('rxjs')
+import Rx, {Observable} from 'rxjs/Rx';
 import _ = require('lodash');
 import colors = require('colors/safe');
-import {Observable} from 'rxjs';
-import {Queue} from './queue';
 import {QProto} from "./queue-proto";
 
 //project

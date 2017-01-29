@@ -9,11 +9,10 @@ import cp = require('child_process');
 import EE = require('events');
 
 //npm
-import Rx = require('rxjs');
+import {Observable} from 'rxjs/Rx';
 import _ = require('lodash');
 import uuidV4 = require('uuid/v4');
 import colors = require('colors/safe');
-import {Observable} from 'rxjs/Rx';
 
 //project
 import sed = require('./sed');
@@ -310,7 +309,7 @@ export function acquireLockRetry(q: QProto, obj: any): Observable<any> {
 
                 Observable.timer(3600)
                     .flatMap(() => {
-                        return Rx.Observable.throw(' => Rx.Observable.throw => acquire lock timed out')
+                        return Observable.throw(' => Rx.Observable.throw => acquire lock timed out')
                     })
             )
         )
@@ -453,7 +452,7 @@ export function acquireLock(q: QProto, name: string): Observable<any> {
         throw new Error(' => OPQ implementation error => no name for mutex append.');
     }
 
-    return Observable.create(obs => {
+    return Observable.create(sub => {
 
         client.lock(lock, {append: name}, function (err, unlock, id) {
             if (err) {
@@ -473,13 +472,13 @@ export function acquireLock(q: QProto, name: string): Observable<any> {
                 releaseLockCount: releaseLockCount
             }));
 
-            obs.next({
+            sub.next({
                 error: err ? (err.stack || err) : undefined,
                 id: id,
                 name: name
             });
 
-            obs.complete();
+            sub.complete();
 
         });
 
@@ -503,7 +502,7 @@ export function releaseLock(q: QProto, lockUuid: string | boolean): Observable<a
         debug('\n\n', 'drain locks/unlocks => ', drainLocks, drainUnlocks, '\n\n');
     }
 
-    return Observable.create(obs => {
+    return Observable.create(sub => {
 
         const lock = q.lock;
 
@@ -516,11 +515,11 @@ export function releaseLock(q: QProto, lockUuid: string | boolean): Observable<a
                 releaseLockCount++;
             }
 
-            obs.next({
+            sub.next({
                 error: err ? (err.stack || err) : undefined
             });
 
-            obs.complete();
+            sub.complete();
 
         });
 

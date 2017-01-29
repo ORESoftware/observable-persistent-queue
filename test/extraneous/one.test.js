@@ -7,10 +7,10 @@ const fs = require('fs');
 
 //npm
 const colors = require('colors/safe');
-const Rx = require('rxjs');
+const Rx = require('rxjs/Rx');
 
 //project
-const Queue = require('../lib/queue');
+const {Queue} = require('../../lib/queue');
 
 
 const q = new Queue({
@@ -93,17 +93,17 @@ setInterval(function () {
             if(data.error){
                 console.error(data.error);
             }
-            else if(data){
-                console.log(' => add data => ', data);
+            else if(data.value){
+                console.log(' => dequeue data => ', data);
             }
         });
 
-}, 150);
+}, 8);
 
 
 setInterval(function () {
 
-    const c = q.add('foo bar baz', {isPublish: false})
+    const c = q.enq('foo bar baz', {isPublish: false})
         .subscribe(function(data){
             if(data.error){
                 console.error(data.error);
@@ -113,4 +113,4 @@ setInterval(function () {
             }
     });
 
-}, 150);
+}, 6);

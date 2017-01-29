@@ -3,7 +3,7 @@
  */
 
 
-const Rx = require('rxjs');
+const Rx = require('rxjs/Rx');
 
 process.on('uncaughtException', function(e){
     console.error(' => uncaught exception => ', e.stack || e);
