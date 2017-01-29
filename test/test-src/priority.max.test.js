@@ -3,14 +3,11 @@ const Test = suman.init(module, {
     pre: ['create-test-dir']
 });
 
-
 //TODO: write 300 enqueue items with random priority and make sure all are drained after 50 seconds or whatever
 
 const colors = require('colors/safe');
 
-Test.create(__filename, {},
-
-    function (assert, fs, path, Queue, Rx, suite, userData, before, it, after) {
+Test.create(__filename, {}, function (assert, fs, path, Queue, Rx, suite, userData, before, it, after) {
 
         const id = suite.uniqueId;
         const pre = userData['suman.once.pre.js'];

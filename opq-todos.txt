@@ -31,9 +31,7 @@ http://rxmarbles.com/#scan
 https://github.com/ReactiveX/rxjs/blob/master/doc/operator-creation.md
 
 
-https://www.typescriptlang.org/docs/handbook/compiler-options.html
 
- http://tutorialzine.com/2016/07/learn-typescript-in-30-minutes/
 
  https://github.com/zloirock/core-js#basic
 
