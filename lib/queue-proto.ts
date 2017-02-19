@@ -17,7 +17,7 @@ const debug = require('debug')('cmd-queue');
 import EE = require('events');
 import Client = require('live-mutex/client');
 import lmUtils = require('live-mutex/utils');
-import tail = require('./tail');
+
 
 import {
     IPriority,

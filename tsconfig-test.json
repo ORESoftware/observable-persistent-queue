@@ -1,7 +1,13 @@
 {
   "compilerOptions": {
-    "types": ["node","lodash","rxjs"],
-    "typeRoots": [ "node_modules/@types"],
+    "types": [
+      "node",
+      "lodash",
+      "rxjs"
+    ],
+    "typeRoots": [
+      "node_modules/@types"
+    ],
     "compileOnSave": true,
     "target": "es5",
     "module": "commonjs",
@@ -11,7 +17,10 @@
     "allowJs": true,
     "outDir": "dist",
     "allowUnreachableCode": true,
-    "lib": ["es2015", "dom"]
+    "lib": [
+      "es2015",
+      "dom"
+    ]
   },
   "include": [
     "test/.suman/**/*",
