@@ -20,79 +20,78 @@ const debug = require('debug')('cmd-queue');
 
 export = function sed(q: QProto, pattern: string | string[], $isReplace: boolean, $count: number): Observable<any> {
 
-    const file : string = q.filepath;
-    const patterns : Array<string> = _.flattenDeep([pattern]);
+  const file: string = q.filepath;
+  const patterns: Array<string> = _.flattenDeep([pattern]);
 
-    //force boolean to string
-    const isReplace: string = String($isReplace);
+  //force boolean to string
+  const isReplace: string = String($isReplace);
 
-    assert(isReplace === 'true' || isReplace === 'false', ' => Boolean to string conversion failed.');
+  assert(isReplace === 'true' || isReplace === 'false', ' => Boolean to string conversion failed.');
 
-    let priority = 0;
+  let priority = 0;
 
-    if (q.priority) {
+  if (q.priority) {
 
-        // queue.priorityCycleIndex = queue.priorityCycleIndex + count;
-        const ind = q._priority.priorityCycleIndex++;
-        const cycleNumber = ind % q._priority.totalPriorityCycles;
+    // queue.priorityCycleIndex = queue.priorityCycleIndex + count;
+    const ind = q._priority.priorityCycleIndex++;
+    const cycleNumber = ind % q._priority.totalPriorityCycles;
 
-        // console.log('priority cycle index => ', ind);
-        // console.log(' => Current cycle-number => ', cycleNumber);
+    // console.log('priority cycle index => ', ind);
+    // console.log(' => Current cycle-number => ', cycleNumber);
 
-        let accumulatedValue = 0;
+    let accumulatedValue = 0;
 
-        q._priority.levels.every(function (obj) {
+    q._priority.levels.every(function (obj) {
 
-            accumulatedValue += obj.cycles;
-            if (cycleNumber <= accumulatedValue) {
-                priority = obj.level;
-                return false;
-            }
+      accumulatedValue += obj.cycles;
+      if (cycleNumber <= accumulatedValue) {
+        priority = obj.level;
+        return false;
+      }
 
-            return true;
-        });
+      return true;
+    });
 
-    }
+  }
 
-    if (patterns.length < 1) {
-        patterns.push('\\S+');
-    }
+  if (patterns.length < 1) {
+    patterns.push('\\S+');
+  }
 
-    return Observable.create(obs => {
+  return Observable.create(obs => {
 
-        process.nextTick(function () {
+    process.nextTick(function () {
 
-            const count = $count || 1;
-            const prioritySearchCap = 20;
-            const data = rpl.run(file, patterns, isReplace, count, priority, prioritySearchCap);
+      const count = $count || 1;
+      const prioritySearchCap = 20;
+      const data = rpl.run(file, patterns, isReplace, count, priority, prioritySearchCap);
 
-            const d = {
-                file: file,
-                pattern: pattern,
-                isReplace: isReplace,
-                count: count
-            };
+      const d = {
+        file: file,
+        pattern: pattern,
+        isReplace: isReplace,
+        count: count
+      };
 
-            // console.log('\n',' => data from C++ => \n', util.inspect(d), '\n',data,'\n');
+      // console.log('\n',' => data from C++ => \n', util.inspect(d), '\n',data,'\n');
 
-            const ret = data.map(function (l) {
-                try {
-                    return JSON.parse(String(l).trim());
-                }
-                catch (err) {
-                    return '';
-                }
+      const ret = data.map(function (l) {
+        try {
+          return JSON.parse(String(l).trim());
+        }
+        catch (err) {
+          return '';
+        }
 
-            }).filter(function (l) {
-                return l;
-            });
+      }).filter(function (l) {
+        return l;
+      });
 
-            obs.next(ret);
-            obs.complete();
-
-        });
-
+      obs.next(ret);
+      obs.complete();
 
     });
+
+  });
 
 };
