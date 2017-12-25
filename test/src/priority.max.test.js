@@ -110,22 +110,19 @@ Test.create(function (assert, fs, path, Queue, Rx, suite, userData, before, it, 
     .subscribe(
       function (v) {
         if (v.error) {
-          console.log(colors.yellow.bold(' next enqueue item => '), '\n', v);
+          console.error(colors.yellow.bold('next enqueue item => '), '\n', v);
         }
       },
-      t.fail,
-      function () {
 
+      t.fail,
+
+      function () {
         q.getClient().requestLockInfo(q.getLock(), function (err, data) {
 
           if (err) {
             return t.fail(err);
           }
 
-          console.log('\n', ' => Locked data after drain => ', data, '\n');
-
-          console.log('complete');
-          console.log('time => ', Date.now() - s);
           t.done();
 
         });
@@ -146,17 +143,14 @@ Test.create(function (assert, fs, path, Queue, Rx, suite, userData, before, it, 
       console.log('\n', ' => Locked data before isEmpty() => ', data, '\n');
 
       q.getSize().subscribe(
-        h.wrap(function (v) {
-          console.log(' => v => ', v);
-          assert.equal(v.count, 0, ' => Count is not correct.');
-        }),
+        function (v) {
+          h.assert.equal(v.count, 0, ' => Count is not correct.');
+        },
         function (e) {
           console.error(e);
           h.fail(e);
         },
         function () {
-
-          console.log(' => Is empty is completed');
 
           q.getClient().requestLockInfo(q.getLock(), function (err, data) {
 
@@ -164,7 +158,7 @@ Test.create(function (assert, fs, path, Queue, Rx, suite, userData, before, it, 
               return h.fail(err);
             }
 
-            console.log('\n', ' => Locked data *after* empty => ', data, '\n');
+            console.log('Locked data *after* empty => ', data);
             h.done();
 
           });

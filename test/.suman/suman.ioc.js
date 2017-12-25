@@ -11,14 +11,18 @@ module.exports = data => {
 
   return {
 
-    //the following are examples
+    dependencies: {
 
-    Rx: function () {
-      return require('rxjs/Rx');
-    },
+      //the following are examples
 
-    Queue: function () {
-      return require('../../lib/queue').Queue;
+      Rx: function () {
+        return require('rxjs/Rx');
+      },
+
+      Queue: function () {
+        return require('../../lib/queue').Queue;
+      }
+
     }
 
   }

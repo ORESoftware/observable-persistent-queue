@@ -7,6 +7,9 @@ import fs = require('fs');
 //npm
 import {Observable} from 'rxjs/Rx';
 
+//project
+import {log} from './logging';
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export = function (file: any, rgx: any) {

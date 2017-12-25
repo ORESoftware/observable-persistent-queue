@@ -5,9 +5,8 @@ import util = require('util');
 import EE = require('events');
 
 //npm
-import colors = require('colors/safe');
+import colors = require('chalk');
 import {Queue} from './queue';
-const debug = require('debug')('opq');
 
 //project
 import {tail} from './tail';
@@ -20,7 +19,6 @@ export const startTail = (q: Queue, push: Function) => {
   const fp = q.filepath;
   
   //start tailing, only after we know that the file exists, etc.
-  
   if (!callable) {
     return;
   }
@@ -29,8 +27,6 @@ export const startTail = (q: Queue, push: Function) => {
   callable = false;
   
   tail(fp).on('data', (data: any) => {
-    
-    debug('\n', colors.cyan(' => raw data (well, trimmed) from tail => '), '\n', String(data).trim());
     
     data = String(data).split('\n')
     .filter(ln => String(ln).trim().length > 0)
@@ -41,7 +37,7 @@ export const startTail = (q: Queue, push: Function) => {
         return JSON.parse(d);
       }
       catch (err) {
-        console.log('\n', colors.red(' => bad data from tail => '), '\n', d);
+        process.emit('warning', 'bad data from tail', d);
         return '';
       }
     })

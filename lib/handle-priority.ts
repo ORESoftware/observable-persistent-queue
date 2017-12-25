@@ -6,14 +6,14 @@ import util = require('util');
 import {Queue} from "./queue";
 import {IPriorityLevel} from "./object-interfaces";
 
-///////////////////////////////////////////////////////////////////////
-
+// project
+import {log} from './logging';
 const priorityMaxSearchMin = 5;
 const priorityMaxSearchMax = 300;
 
 ///////////////////////////////////////////////////////////////////////
 
-export = function (obj: any, q: Queue) {
+export const handlePriority = function (obj: any, q: Queue) {
   
   q.priority = obj.priority;
   
@@ -53,17 +53,18 @@ export = function (obj: any, q: Queue) {
     il.push(obj.level);
     return obj.cycles;
     
-  }).reduce(function (a, b) {
+  })
+  .reduce(function (a, b) {
     return a + b;
   });
   
   il = il.sort();
   
-  console.log(' => Lowest priority item => ', il[0]);
-  console.log(' => Highest priority => ', il[il.length - 1]);
+  log.info('Lowest priority item:', il[0]);
+  log.info('Highest priority:', il[il.length - 1]);
   
   // in order for modulus arithmetic to work, we need to start at 0 + that
   q._priority.priorityCycleIndex = 0 + q._priority.totalPriorityCycles;
-  console.log(' => Total number of cycles => ', q._priority.priorityCycleIndex);
+  log.info('Total number of cycles:', q._priority.priorityCycleIndex);
   
 };

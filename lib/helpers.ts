@@ -12,9 +12,10 @@ import EE = require('events');
 import {Observable} from 'rxjs/Rx';
 import _ = require('lodash');
 import uuidV4 = require('uuid/v4');
-import colors = require('colors/safe');
+import colors = require('chalk');
 
 //project
+import {log} from './logging';
 import {sed} from './sed';
 import _countLines = require('./count-lines');
 import {Queue} from "./queue";
@@ -22,11 +23,9 @@ import {QProto} from "./queue-proto";
 const debug = require('debug')('cmd-queue');
 
 import {
-  
   IBackpressureObj,
   IGenericObservable,
   IClientCount
-  
 }
   from "./object-interfaces";
 
@@ -306,6 +305,7 @@ export const backpressure = function (q: Queue, val: IBackpressureObj, fn: Funct
   return Observable.create(sub => {
     
     fn.call(sub, function (err, ret) {
+      
       if (err) {
         return sub.error(err);
       }
@@ -444,22 +444,21 @@ export const acquireLock = function (q: QProto, name: string): Observable<any> {
   return Observable.create(sub => {
     
     client.lock(lock, {append: name}, function (err, unlock, id) {
+      
       if (err) {
-        console.error('\n\n', ' => Error acquiring lock => \n', (err.stack || err));
+        console.error('Error acquiring lock =>', err.stack || err);
       }
       else {
         acquireLockCount++;
-        
         if (String(name).startsWith('<drain')) {
           drainLocks++;
-          debug('\n\n', 'drain locks/unlocks (locking) => ', drainLocks, drainUnlocks, '\n\n');
         }
       }
       
-      console.log(util.inspect({
-        acquireLockCount: acquireLockCount,
-        releaseLockCount: releaseLockCount
-      }));
+      // console.log(util.inspect({
+      //   acquireLockCount: acquireLockCount,
+      //   releaseLockCount: releaseLockCount
+      // }));
       
       sub.next({
         error: err ? (err.stack || err) : undefined,

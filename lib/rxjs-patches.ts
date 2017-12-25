@@ -3,7 +3,11 @@
 //core
 import util = require('util');
 
+//npm
 import {Observable} from 'rxjs/Rx';
+
+//project
+import {log} from './logging';
 const proto = <any> Observable.prototype;
 
 ///////////////////////////////////////////////
@@ -22,7 +26,7 @@ proto.backpressure = function (fn) {
             return sub.error(err);
           }
           
-          console.log(util.inspect(val));
+          // console.log('backpressure:',util.inspect(val));
           process.nextTick(val.cb.bind(val));
           sub.next(data);
         });

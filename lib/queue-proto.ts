@@ -10,12 +10,13 @@ import assert = require('assert');
 import {Observable, Subject} from 'rxjs/Rx';
 import _ = require('lodash');
 import uuidV4 = require('uuid/v4');
-import colors = require('colors/safe');
+import colors = require('chalk');
 
 //project
 import EE = require('events');
 import {Client} from 'live-mutex/client';
 import lmUtils = require('live-mutex/utils');
+import {log} from './logging';
 
 import {
   IPriority,

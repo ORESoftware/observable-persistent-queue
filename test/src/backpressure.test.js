@@ -33,33 +33,27 @@ Test.create('backpressure', (b, Queue, Rx, path, fs, before, it, util, userData,
     .concatAll();
   });
 
-  it('has correct count', function () {
-
+  it('has correct count', t => {
     return q.getSize()
     .do(function (data) {
-      assert.equal(data.count, count, ' => Count is incorrect.');
+      t.assert.equal(data.count, count, 'Count is incorrect.');
     });
-
   });
 
   describe('count after queue', (b, before, it) => {
 
     before('drains queue', t => {
-
       return q.drain({backpressure: true})
       .backpressure(function (data, cb) {
         setTimeout(cb, 200);
       });
-
     });
 
     it('has correct count', function () {
-
       return q.getSize()
       .do(function (data) {
-        assert.equal(data.count, 0, ' => Count is incorrect.');
+        assert.equal(data.count, 0, 'Count is incorrect.');
       });
-
     });
 
   });

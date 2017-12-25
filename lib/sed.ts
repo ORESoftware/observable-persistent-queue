@@ -10,7 +10,10 @@ import assert = require('assert');
 import rpl = require('replace-line');
 import {Observable} from 'rxjs/Rx';
 import _ = require('lodash');
-import colors = require('colors/safe');
+import colors = require('chalk');
+
+//project
+import {log} from './logging';
 import {QProto} from "./queue-proto";
 
 /////////////////////////////////////////////////////////////////////////////////////////////

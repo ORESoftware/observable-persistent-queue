@@ -4,17 +4,17 @@
 import cp = require('child_process');
 
 //npm
-import colors = require('colors/safe');
+import colors = require('chalk');
 import {ChildProcess} from "child_process";
 
 ///////////////////////////////////////////////////////////////
 
-function unref(n: ChildProcess) {
+const unref = function (n: ChildProcess) {
   n.stderr.removeAllListeners();
   n.stdout.removeAllListeners();
   n.removeAllListeners();
   n.unref();
-}
+};
 
 export const tail =  function (fp: string) {
   
