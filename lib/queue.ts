@@ -132,7 +132,6 @@ export class Queue extends QProto {
       });
 
       push.opqId = opqId++;
-
       return obsClient.subscribe(push);
     });
 
@@ -163,19 +162,15 @@ export class Queue extends QProto {
       return Observable.fromPromise(promise)
       .flatMap(() => {
         this.client = new Client({key: lck, port: port, listener: onClientConnectionChange});
-        console.log('clienting...');
         return Observable.fromPromise(this.client.ensure());
       })
       .flatMap(() => {
-        console.log('acquiring lock...');
         return acquireLock(this, '<init>')
         .flatMap(obj => {
-          console.log('acquiring lock...retry');
           return acquireLockRetry(this, obj)
         });
       })
       .flatMap(obj => {
-        console.log('genericAppendFile');
         return genericAppendFile(this, '')
         .map(() => obj)
       })

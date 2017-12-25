@@ -285,8 +285,6 @@ export const acquireLockRetry = function (q: QProto, obj: any): Observable<any> 
     .map(() => obj);
   }
   
-  console.log('\n\n', colors.red.bold(' => need to retry acquiring lock.'), '\n\n');
-  
   return Observable.interval(1500)
   .takeUntil(
     // take until either the timeout occurs or we actually acquire the lock
@@ -296,10 +294,10 @@ export const acquireLockRetry = function (q: QProto, obj: any): Observable<any> 
       
       Observable.timer(3600)
       .flatMap(() => {
-        return Observable.throw('Rx.Observable.throw => acquire lock timed out')
+        return Observable.throw('acquire lock timed out')
       })
     )
-  )
+  );
   
 };
 
@@ -411,25 +409,23 @@ export const waitForClientCount = function (q: QProto, opts: any): Observable<an
     const last = value[value.length - 1];
     
     if (last.clientCount < 10) {
-      console.log(' client count is less than 10.');
+      // client count is less than 10
       return true;
     }
     
     if (index >= tries) {
       // we have tried enough, have to let it through
-      console.log('try limit is reached must let through.');
+      // try limit is reached must let through
       return true;
     }
-    
-    // console.log('client diff:',diff);
     
     if ((first.clientCount - last.clientCount) > diff) {
       // client buildup is now reduced, so we can make more requests
-      console.log('count is less than diff, we let through.');
+      // count is less than diff, we let through
       return true;
     }
     
-    // console.log('condition not met in wait for client count.');
+    // condition not met in wait for client count
     return false;
     
   })
@@ -442,7 +438,7 @@ export const acquireLock = function (q: QProto, name: string): Observable<any> {
   const client = q.client;
   
   if (typeof name !== 'string') {
-    throw new Error(' => OPQ implementation error => no name for mutex append.');
+    throw new Error('OPQ implementation error => no name for mutex append.');
   }
   
   return Observable.create(sub => {
@@ -460,7 +456,7 @@ export const acquireLock = function (q: QProto, name: string): Observable<any> {
         }
       }
       
-      debug(util.inspect({
+      console.log(util.inspect({
         acquireLockCount: acquireLockCount,
         releaseLockCount: releaseLockCount
       }));

@@ -69,7 +69,7 @@ q.enq('some message to put on the queue');
 q.deq();
 
 // but wait, this is node.js, where is the callback? Here we go:
-q.enq('some message').subscribe(function next(result){})
+q.enq('some message').subscribe(function next(result){});
 q.deq().subscribe(function next(result){}); 
 
 // for the enq() and deq() methods, you do not need to call subscribe to initiate the action
@@ -153,13 +153,10 @@ q.deq({
 
 ```
 
-## Actual real-life usage examples integrated with RxJS
 
-Please see the examples directory.
+### cleaning up when you're done
 
-
-# cleaning up when you're done
-
+TBD
 
 
 
