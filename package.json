@@ -46,6 +46,6 @@
     "mkdirp": "^0.5.1",
     "proper-lockfile": "^2.0.0",
     "rimraf": "^2.5.4",
-    "suman": "github:oresoftware/suman#dev"
+    "suman": "github:sumanjs/suman#rebase_branch"
   }
 }
