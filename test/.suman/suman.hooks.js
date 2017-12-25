@@ -9,18 +9,21 @@
 
 const fs = require('fs');
 const path = require('path');
-const util  = require('util');
+const util = require('util');
+const uuid = require('uuid');
 
 let id = 0;
 
-module.exports = (suite) => {
+module.exports = (b, before) => {
 
-    suite.uniqueId = fs.statSync(suite.fileName).ino;
+  console.log('bbbb => ', util.inspect(b));
 
-    suite.before.cb(h => {
+  // b.uniqueId = fs.statSync(b.filename).ino;
+  b.uniqueId = uuid.v4();
 
-        h.done();
-
-    });
+  before.cb(h => {
+    console.log('this is a before hook in suman.hooks.js.');
+    h.done();
+  });
 
 };

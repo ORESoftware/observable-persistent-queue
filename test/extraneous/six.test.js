@@ -8,9 +8,7 @@
 // const fs = require('fs');
 // const colors = require('colors/safe');
 
-
 const stream = require('stream');
-
 
 // export class Readable extends events.EventEmitter implements NodeJS.ReadableStream {
 //     readable: boolean;
@@ -95,7 +93,6 @@ const stream = require('stream');
 //     read?: (size?: number) => any;
 // }
 
-
 // export interface WritableOptions {
 //     highWaterMark?: number;
 //     decodeStrings?: boolean;
@@ -104,44 +101,37 @@ const stream = require('stream');
 //     writev?: (chunks: { chunk: string | Buffer, encoding: string }[], callback: Function) => any;
 // }
 
-
 function getWritable() {
 
-    return new stream.Writable({
-        write: function (chunk, encoding, cb) {
-            console.log(' => chunk => ', String(chunk));
-            setTimeout(cb, 400);
-        }
-    });
+  return new stream.Writable({
+    write: function (chunk, encoding, cb) {
+      console.log(' => chunk => ', String(chunk));
+      setTimeout(cb, 400);
+    }
+  });
 
 }
-
 
 function getReadable(data) {
 
-    let i = 0;
+  let i = 0;
 
-    const r = new stream.Readable({
-        encoding: 'utf8',
-        objectMode: false,
-        read: function (n) {
+  const r = new stream.Readable({
+    encoding: 'utf8',
+    objectMode: false,
+    read: function (n) {
+      console.log('reading' + i++);
+    }
+  });
 
-            console.log('reading' + i++);
+  setInterval(() => {
+    console.log('pushing frog');
+    r.push('frog');
+  }, 1600);
 
-        }
-    });
-
-
-    setInterval(() => {
-        console.log('pushing frog');
-        r.push('frog');
-        // console.log('data =>', data);
-    },1600);
-
-    return r;
+  return r;
 
 }
-
 
 const readableStrm = getReadable([1, 2, 3, 4, 5]);
 
@@ -154,7 +144,7 @@ const piped1 = readableStrm.pipe(w1);
 // const piped3 = readableStrm.pipe(w1);
 
 piped1.on('finish', function () {
-    console.log('finish');
+  console.log('finish');
 });
 
 // piped2.on('finish', function () {

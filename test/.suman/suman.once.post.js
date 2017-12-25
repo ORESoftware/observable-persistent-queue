@@ -5,12 +5,10 @@
 // any potential overload of any of your network components that may already be under load.
 // ******************************************************************************************************************************
 
-
 module.exports = data => {
 
-    return {
-
-
-    }
+  return {
+    dependencies:{}
+  }
 
 };
