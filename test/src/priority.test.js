@@ -156,7 +156,7 @@ Test.create(function (b, assert, fs, path, Queue, Rx, suite, userData, before, i
               return h.fail(err);
             }
 
-            console.log('\n', ' => Locked data *after* empty => ', data, '\n');
+            console.log('\n', 'Locked data *after* empty => ', data, '\n');
             h.done();
 
           });

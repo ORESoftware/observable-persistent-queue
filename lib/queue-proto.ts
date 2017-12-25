@@ -27,7 +27,7 @@ import {
 }
   from "./object-interfaces";
 
-const {
+import {
   
   acquireLock,
   releaseLock,
@@ -36,7 +36,7 @@ const {
   acquireLockRetry,
   waitForClientCount
   
-} = require('./helpers');
+} from './helpers';
 
 export abstract class QProto {
   
@@ -87,7 +87,7 @@ export abstract class QProto {
     
     lines = _.flattenDeep([lines]);
     
-    let $add = this.init()
+    let add$ = this.init()
     .flatMap(() => {
       return waitForClientCount(this, {timeout: 3000, count: 25, tries: 25})
     })
@@ -104,19 +104,18 @@ export abstract class QProto {
       });
     })
     .catch(err => {
-      console.error('\n', ' => add / enqueue error => \n', err.stack || err);
+      console.error('add/enqueue error:', err.stack || err);
       const force = !String(err.stack || err).match(/acquire lock timed out/);
       return releaseLock(this, force);
     })
     .take(1);
     
     if (isShare) {
-      $add = $add.share();
-      $add.subscribe();
+      add$ = add$.share();
+      add$.subscribe();
     }
     
-    return $add;
-    
+    return add$;
   }
   
   _deqWait(opts: IDequeueOpts): Subject<any> {
@@ -126,8 +125,7 @@ export abstract class QProto {
     const pattern = opts.pattern;
     const min = opts.min || count;
     
-    assert(Array.isArray(opts.lines),
-      ' => OPQ Implementation error => opts.lines should be an array');
+    assert(Array.isArray(opts.lines), 'OPQ Implementation error => opts.lines should be an array');
     
     // store the lines here which we will eventually send back
     let ret = <any> [];
@@ -170,7 +168,6 @@ export abstract class QProto {
       else {
         return releaseLock(this, obj.id)
         .flatMap(() => {
-          console.log('diff => ', diff);
           return Observable.race(
             Observable.timer(8500),
             // we only want to re-invoke this chain after more items have been added to the queue

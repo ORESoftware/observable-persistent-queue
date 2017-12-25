@@ -82,8 +82,9 @@ export class Queue extends QProto {
     const fp = this.fp = this.filepath = obj.filepath || obj.filePath || obj.fp;
     const port = this.port = obj.port;
     
-    assert(String(fp).length > 0, ' => Please pass the filepath of the queue.');
-    assert(Number.isInteger(port), ' => Please pass in an integer for the port.');
+    assert(typeof fp === 'string', 'Please pass the filepath of the queue.');
+    assert(String(fp).length > 0, 'Please pass the filepath of the queue.');
+    assert(Number.isInteger(port), 'Please pass in an integer for the port.');
     
     const lck = this.lock;
     
@@ -147,7 +148,7 @@ export class Queue extends QProto {
     }
     
     // init both creates the queue file if it does not exist, and finds/initializes the live-mutex
-    this.init = (isPublish) => {
+    this.init = (isPublish?: boolean) => {
       
       if (this.isReady) {
         return makeGenericObservable(null, {isPublish: isPublish});
@@ -174,17 +175,16 @@ export class Queue extends QProto {
         });
       })
       .flatMap(obj => {
-        return genericAppendFile(this, '')
-        .map(() => obj)
+        return genericAppendFile(this, '').map(() => obj)
       })
       .flatMap(obj => {
-        return ifFileExistAndIsAllWhiteSpaceThenTruncate(this)
-        .map(() => obj)
+        return ifFileExistAndIsAllWhiteSpaceThenTruncate(this).map(() => obj)
       })
       .flatMap((obj: any) => {
         return releaseLock(this, obj.id);
         
-      }).do(() => {
+      })
+      .do(() => {
         clientEE.emit('ready');
         this.isReady = true;
         startTail(this, push);
@@ -194,7 +194,6 @@ export class Queue extends QProto {
         log.error(e.stack || e);
         const force = !String(e.stack || e).match(/acquire lock timed out/);
         return releaseLock(this, force);
-        
       });
     };
   }
@@ -244,7 +243,6 @@ export class Queue extends QProto {
       const force = !String(e.stack || e).match(/acquire lock timed out/);
       return releaseLock(this, force);
     });
-    
   }
   
   readAll(): Subject<any> {
@@ -292,7 +290,6 @@ export class Queue extends QProto {
       return releaseLock(this, force);
     })
     .take(1);
-    
   }
   
   isEmpty(obs: Subject<any>): Observable<any> {
@@ -340,7 +337,6 @@ export class Queue extends QProto {
       return releaseLock(this, force);
     })
     .take(1);
-    
   }
   
   drain(obs?: Subject<any>, opts?: IDrainOpts): Observable<any> {
@@ -425,8 +421,8 @@ export class Queue extends QProto {
     return countLines(this);
   }
   
-  enqueue(lines: string | Array<string>, opts: IEnqueueOpts): Observable<any> {
-    return this.enq(lines, opts);
+  enqueue(lines: string | Array<string>, opts?: IEnqueueOpts): Observable<any> {
+    return this.enq.apply(this, arguments);
   }
   
   enq(lines: string | Array<string>, opts?: IEnqueueOpts): Observable<any> {
@@ -450,7 +446,7 @@ export class Queue extends QProto {
         'priority option must be an integer, between 1 and ' + highestLevel + ', inclusive.')
     }
     
-    const isShare = opts.isShare === true;
+    const isShare = opts.isShare !== false;
     
     lines = _.flattenDeep([lines]).map(function (l) {
       // remove unicode characters because they will mess up
@@ -492,7 +488,7 @@ export class Queue extends QProto {
     return this.deq.apply(this, arguments);
   }
   
-  deq(opts: IDequeueOpts): Observable<any> {
+  deq(opts?: IDequeueOpts): Observable<any> {
     
     if (!opts || !opts.lines) {
       
@@ -528,12 +524,10 @@ export class Queue extends QProto {
       .map(obj => ({error: obj.error, id: obj.id, opts: opts}))
     })
     .flatMap(obj => {
-      return removeMultipleLines(this, pattern, count)
-      .map(lines => ({lines: lines, id: obj.id}))
+      return removeMultipleLines(this, pattern, count).map(lines => ({lines: lines, id: obj.id}))
     })
     .flatMap(obj => {
-      return releaseLock(this, obj.id)
-      .map(() => obj.lines)
+      return releaseLock(this, obj.id).map(() => obj.lines)
     })
     .catch(e => {
       log.error(e.stack || e);//

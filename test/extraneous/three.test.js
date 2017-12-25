@@ -1,12 +1,8 @@
-/**
- * Created by oleg on 12/17/16.
- */
-
 
 const path = require('path');
 const util = require('util');
 const fs = require('fs');
-const Queue = require('../../lib/queue');
+const Queue = require('../../lib/queue').Queue;
 
 const q = new Queue({
   port: 7575,
@@ -16,11 +12,10 @@ const q = new Queue({
 const suman = require('suman');
 const Test = suman.init(module);
 
-Test.create('test unique', function (assert) {
+Test.create('test unique', function (assert, it) {
 
   const results = [];
-
-  var subscriptions;
+  let subscriptions;
 
   setTimeout(function () {
 
@@ -48,7 +43,7 @@ Test.create('test unique', function (assert) {
 
   }, 30);
 
-  this.it.cb('test', t => {
+  it.cb('test', t => {
 
     setTimeout(function () {
 

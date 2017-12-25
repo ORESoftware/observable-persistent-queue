@@ -17,10 +17,9 @@ import colors = require('chalk');
 //project
 import {log} from './logging';
 import {sed} from './sed';
-import _countLines = require('./count-lines');
+import {getLineCountOfQueue} from './count-lines';
 import {Queue} from "./queue";
 import {QProto} from "./queue-proto";
-const debug = require('debug')('cmd-queue');
 
 import {
   IBackpressureObj,
@@ -91,16 +90,18 @@ export const makeGenericObservable = function (fn?: Function, opts?: IGenericObs
   let obs = Observable.create(sub => {
     if (fn) {
       fn(function (err, val) {
-        if (err) {
-          sub.error(err);
-        }
-        else {
+        process.nextTick(function () {
+          
+          if (err) {
+            return sub.error(err);
+          }
+          
           sub.next(val);
           if (true || isCallCompleted) {
             sub.complete();
           }
           
-        }
+        });
       });
     }
     else {
@@ -121,16 +122,15 @@ export const makeGenericObservable = function (fn?: Function, opts?: IGenericObs
 };
 
 export const countLines = function (q: Queue, pattern?: string): Observable<any> {
-  return _countLines(q.fp, pattern);
+  return getLineCountOfQueue(q.fp, pattern);
 };
 
 export const findFirstLine = function (q: Queue, pattern?: string): Observable<any> {
   
   pattern = pattern || '\\S+';
-  
   const count = 1;
-  return sed(q, pattern, false, count)
-  .map(data => {
+  
+  return sed(q, pattern, false, count).map(data => {
     return data[0];
   });
 };
@@ -141,11 +141,9 @@ export const removeOneLine = function (q: Queue, pattern?: string): Observable<a
   
   const count = 1;
   
-  return sed(q, pattern, true, count)
-  .map(data => {
+  return sed(q, pattern, true, count).map(data => {
     if (data.length > 1) {
-      console.error(colors.red(' => OPQ Implementation Warning => ' +
-        'removeOneLine data had a length greater than 1.'));
+      console.error('OPQ Implementation Warning => removeOneLine data had a length greater than 1.');
     }
     return data[0];
   });
@@ -153,10 +151,8 @@ export const removeOneLine = function (q: Queue, pattern?: string): Observable<a
 
 export const removeMultipleLines = function (q: QProto, pattern?: string, count?: any): Observable<any> {
   
-  return sed(q, pattern, true, count)
-  .map(data => {
-    assert(Array.isArray(data),
-      ' => Implementation error => data should be in an array format.');
+  return sed(q, pattern, true, count).map(data => {
+    assert(Array.isArray(data), 'Implementation error => data should be in an array format.');
     return data;
   });
   
@@ -187,14 +183,14 @@ export const writeFile = function (q: Queue, data?: string): Observable<any> {
 export const appendFile = function (q: QProto, $lines: Array<string> | string, priority: number): Observable<any> {
   
   const filePath = q.fp;
-  assert(Number.isInteger(priority), ' => Implementation error => "priority" must be an integer.');
+  assert(Number.isInteger(priority), 'Implementation error => "priority" must be an integer.');
   
   let lines: Array<string> = _.flattenDeep([$lines]);
   
   //ensure new line separation
   lines = lines.map(function (l) {
     
-    assert.equal(typeof l, 'string');
+    assert.equal(typeof l, 'string', 'value was not typeof string.');
     assert(!l.match(/:/), ' => Usage error => You cannot use colon characters in your queue messages, ' +
       'as OPQ uses colons to easily delineate JSON.');
     
@@ -213,6 +209,7 @@ export const appendFile = function (q: QProto, $lines: Array<string> | string, p
   
   return Observable.create(sub => {
     fs.appendFile(filePath, data, {flag: 'a'}, err => {
+      
       if (err) {
         return sub.error(err);
       }
@@ -231,26 +228,23 @@ export const appendFile = function (q: QProto, $lines: Array<string> | string, p
 
 export const delayObservable = function (delay?: number, isCompleted?: boolean): Observable<any> {
   return Observable.create(sub => {
-    setTimeout(function () {
+    const to = delay || 100;
+    setTimeout(() => {
       sub.next();
-      if (isCompleted) {
-        sub.complete();
-      }
-    }, delay || 100);
+      isCompleted && sub.complete();
+    }, to);
   });
 };
 
 export const ifFileExistAndIsAllWhiteSpaceThenTruncate = function (q: Queue): Observable<any> {
   
-  return readFile(q)
-  .flatMap(data => {
+  return readFile(q).flatMap(data => {
+    
     if (data) {
       return makeGenericObservable();
     }
-    else {
-      // if not data, then we truncate file
-      return writeFile(q);
-    }
+    // if not data, then we truncate file
+    return writeFile(q);
   });
 };
 
@@ -284,15 +278,13 @@ export const acquireLockRetry = function (q: QProto, obj: any): Observable<any> 
     .map(() => obj);
   }
   
-  return Observable.interval(1500)
-  .takeUntil(
+  return Observable.interval(1500).takeUntil(
     // take until either the timeout occurs or we actually acquire the lock
     Observable.race(
-      acquireLock(q, obj.name)
-      .filter(obj => !obj.error),
       
-      Observable.timer(3600)
-      .flatMap(() => {
+      acquireLock(q, obj.name).filter(obj => !obj.error),
+      
+      Observable.timer(3600).flatMap(() => {
         return Observable.throw('acquire lock timed out')
       })
     )
@@ -400,8 +392,7 @@ export const waitForClientCount = function (q: QProto, opts: any): Observable<an
   
   let index = 0;
   
-  return q.clientStream.bufferCount(count)
-  .filter(value => {
+  return q.clientStream.bufferCount(count).filter(value => {
     
     index++;
     
@@ -481,13 +472,11 @@ export const releaseLock = function (q: QProto, lockUuid: string | boolean): Obs
   const client = q.client;
   
   if (!lockUuid) {
-    console.error('\n\n', new Error('Cannot release lock without force or proper uuid.').stack, '\n\n');
-    return Observable.throw('Cannot release lock without force or proper uuid.\n\n');
+    return Observable.throw('Cannot release lock without force or proper uuid.');
   }
   
   if (String(lockUuid).startsWith('<drain')) {
     drainUnlocks++;
-    debug('\n\n', 'drain locks/unlocks => ', drainLocks, drainUnlocks, '\n\n');
   }
   
   return Observable.create(sub => {
@@ -497,7 +486,7 @@ export const releaseLock = function (q: QProto, lockUuid: string | boolean): Obs
     client.unlock(lock, lockUuid, function (err) {
       
       if (err) {
-        console.error('\n', ' => Release lock error => ', '\n', err.stack || err);
+        console.error('Release lock error => ', err.stack || err);
       }
       else {
         releaseLockCount++;

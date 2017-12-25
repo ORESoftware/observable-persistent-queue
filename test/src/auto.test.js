@@ -5,6 +5,8 @@ const Test = suman.init(module, {
   pre: ['create-test-dir']
 });
 
+console.warn("Warning: ", "Your custom warning")
+
 Test.create(function (b, assert, fs, path, userData, Queue, Rx, before, it) {
 
   const id = b.uniqueId;

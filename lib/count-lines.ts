@@ -12,7 +12,7 @@ import {log} from './logging';
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export = function (file: any, rgx: any) {
+export const getLineCountOfQueue = function (file: any, rgx: any) {
   
   rgx = rgx || '\\S+';
   

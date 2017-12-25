@@ -1,13 +1,9 @@
-/**
- * Created by oleg on 12/17/16.
- */
-
+'use strict';
 
 const path = require('path');
 const util = require('util');
 const fs = require('fs');
-const colors = require('colors/safe');
-const Queue = require('../../lib/queue');
+const Queue = require('../../lib/queue').Queue;
 
 const q = new Queue({
   port: 8888,
@@ -28,19 +24,21 @@ async.whilst(
   },
   function (cb) {
 
+    console.log('starting...');
+
     q.enq(['zoom', 'bar', 'baz'], {
       controlled: true
     })
     .subscribe(
       function (x) {
-        console.log('\n', ' => add next: \n', util.inspect(x));
+        console.log(' => add next: \n', util.inspect(x));
         // cb();
       },
       function (e) {
-        console.log('\n', ' => dequeue error: ', e.stack);
+        console.log(' => dequeue error: ', e.stack);
         cb(e);
       },
-      () => console.log('\n', ' => dequeue completed!! ')
+      () => console.log( ' => dequeue completed!! ')
     )
 
   },

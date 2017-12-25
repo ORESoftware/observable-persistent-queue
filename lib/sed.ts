@@ -25,9 +25,7 @@ export const sed = function (q: QProto, pattern: string | string[], $isReplace: 
   
   //force boolean to string
   const isReplace: string = String($isReplace);
-  
-  assert(isReplace === 'true' || isReplace === 'false', ' => Boolean to string conversion failed.');
-  
+  assert(isReplace === 'true' || isReplace === 'false', 'Boolean to string conversion failed.');
   let priority = 0;
   
   if (q.priority) {

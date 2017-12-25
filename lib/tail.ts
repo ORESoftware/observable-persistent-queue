@@ -7,6 +7,9 @@ import cp = require('child_process');
 import colors = require('chalk');
 import {ChildProcess} from "child_process";
 
+//project
+import {log} from './logging';
+
 ///////////////////////////////////////////////////////////////
 
 const unref = function (n: ChildProcess) {
@@ -16,13 +19,13 @@ const unref = function (n: ChildProcess) {
   n.unref();
 };
 
-export const tail =  function (fp: string) {
+export const tail = function (fp: string) {
   
   const n = cp.spawn('tail', ['-F', '-n', '+1', fp]);
   // const n = cp.spawn('watch', ['tail', '-n', '+1', file]);
   
   n.on('error', function (err) {
-    console.error('\n', colors.bgRed(' => spawn error => '), '\n', err.stack || err);
+    log.error(' => spawn error => ', err.stack || err);
     unref(n);
   });
   
@@ -30,7 +33,7 @@ export const tail =  function (fp: string) {
   n.stderr.setEncoding('utf8');
   
   n.stderr.on('data', function (d) {
-    console.error('\n', colors.bgRed.white.bold(' => tail spawn stderr => '), '\n', String(d));
+    console.error('tail spawn stderr => ', String(d));
   });
   
   process.once('exit', function () {
@@ -40,7 +43,7 @@ export const tail =  function (fp: string) {
   n.on('close', function (code) {
     
     unref(n);
-    console.error('\n', colors.bgRed(' => tail child process may have closed prematurely => '), code);
+    log.error('tail child process may have closed prematurely => ', code);
   });
   
   return n.stdout;
