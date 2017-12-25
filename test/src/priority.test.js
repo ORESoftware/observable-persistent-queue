@@ -3,18 +3,20 @@ const Test = suman.init(module, {
   pre: ['create-test-dir']
 });
 
-//TODO: write 300 enqueue items with random priority and make sure all are drained after 50 seconds or whatever
-
 const colors = require('colors/safe');
 
-Test.create(function (assert, fs, path, Queue, Rx, suite, userData, before, it, after) {
+Test.create(function (b, assert, fs, path, Queue, Rx, suite, userData, before, it, after) {
 
+  const id = b.uniqueId;
   const pre = userData['suman.once.pre.js'];
-  const p = pre['create-test-dir'];
+  // const p = pre['create-test-dir'];
+  const p = path.join(process.env.HOME, 'software_testing', 'opq');
+  Rx = require('rxjs/Rx');
+  Queue = require('../../lib/queue').Queue;
 
   const q = new Queue({
-    port: 8887,
-    fp: path.resolve(p + '/spaceships-1' + '.txt'),
+    port: 8888,
+    fp: path.resolve(p + '/spaceships-' + id + '.txt'),
     priority: {
       first: 20,
       levels: [
@@ -46,7 +48,7 @@ Test.create(function (assert, fs, path, Queue, Rx, suite, userData, before, it, 
         return h.fail(err);
       }
 
-      console.log('\n', ' => Locked data after queue init() => ', data, '\n');
+      console.log(' => Locked data after queue init() => ', data, '\n');
       h.done();
 
     });
@@ -59,7 +61,6 @@ Test.create(function (assert, fs, path, Queue, Rx, suite, userData, before, it, 
     .take(30)
     .map(function () {
       const p = Math.ceil(Math.random() * 4);
-      console.log(' priority level => ', p);
       return q.enq('foo bar baz', {
         priority: p
       });
@@ -68,13 +69,12 @@ Test.create(function (assert, fs, path, Queue, Rx, suite, userData, before, it, 
     .subscribe(
       function (v) {
         if (v.error) {
-          console.log(colors.yellow.bold('next error => '), v);
+          console.log(colors.yellow.bold('next => '), v);
         }
-
       },
       function (e) {
         console.error(e);
-        h.fail(e);
+        h.fatal(e);
       },
       function () {
 
@@ -95,20 +95,16 @@ Test.create(function (assert, fs, path, Queue, Rx, suite, userData, before, it, 
 
   });
 
-  it.cb('drains queue (priority max)', {timeout: 8000}, t => {
+  it.cb('drains queue (priority)', {timeout: 6000}, t => {
 
     const s = Date.now();
     q.drain({backpressure: true})
     .backpressure(function (data, cb) {
-      setTimeout(function () {
-        cb(null, {error: null})
-      }, 10);
+      setTimeout(cb, 10);
     })
     .subscribe(
       function (v) {
-        if (v.error) {
-          console.log(colors.yellow.bold(' next enqueue item => '), '\n', v);
-        }
+        console.log(colors.yellow.bold(' next enqueue item => '), '\n', v);
       },
       t.fail,
       function () {
@@ -143,13 +139,12 @@ Test.create(function (assert, fs, path, Queue, Rx, suite, userData, before, it, 
       console.log('\n', ' => Locked data before isEmpty() => ', data, '\n');
 
       q.getSize().subscribe(
-        h.wrap(function (v) {
-          console.log(' => v => ', v);
+        function (v) {
+          console.log('v => ', v);
           assert.equal(v.count, 0, ' => Count is not correct.');
-        }),
+        },
         function (e) {
           console.error(e);
-          h.fail(e);
         },
         function () {
 

@@ -15,11 +15,11 @@ import colors = require('colors/safe');
 //project
 const debug = require('debug')('cmd-queue');
 import EE = require('events');
-import Client = require('live-mutex/client');
+import {Client} from 'live-mutex/client';
 import lmUtils = require('live-mutex/utils');
 import {QProto} from './queue-proto';
 import handlePriority = require('./handle-priority');
-import startTail = require('./start-tail');
+import {startTail} from './start-tail';
 import {IPriority, IPriorityInternal, IQueueBuilder, IDequeueOpts, IDrainOpts, IEnqueueOpts} from "./object-interfaces";
 
 ////////////////////////////// add some of our own operators ///////////////////////////////////

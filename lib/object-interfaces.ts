@@ -1,93 +1,68 @@
-/**
- * Created by oleg on 1/11/17.
- */
 
 
 export interface IQueueBuilder {
-
-    filePath?: string;
-    filepath?: string;
-    fp?: string;
-    port: number;
-    priority?: IPriority;
-
+  filePath?: string;
+  filepath?: string;
+  fp?: string;
+  port: number;
+  priority?: IPriority;
 }
 
 export interface IEnqueueOpts {
-
-    isShare?: boolean;
-    priority?: number;
-    controlled?: boolean;
-
+  isShare?: boolean;
+  priority?: number;
+  controlled?: boolean;
 }
 
 export interface IDequeueOpts {
-
-    wait?: boolean;
-    isPriority?: boolean;
-    isConnect?: boolean;
-    pattern?: string;
-    count?: number;
-    lines?: any;
-    min?: number;
+  wait?: boolean;
+  isPriority?: boolean;
+  isConnect?: boolean;
+  pattern?: string;
+  count?: number;
+  lines?: any;
+  min?: number;
 }
 
 export interface IPriorityLevel {
-
-    level: number;
-    cycles: number;
-    depth?: number;
-
+  level: number;
+  cycles: number;
+  depth?: number;
 }
 
 export interface IDrainOpts {
-
-    priority?: number;
-    force?: boolean;
-    backpressure?: boolean;
-    isConnect?: boolean;
-    delay?: number;
-
+  priority?: number;
+  force?: boolean;
+  backpressure?: boolean;
+  isConnect?: boolean;
+  delay?: number;
 }
 
 export interface IPriority {
-
-    first: number;
-    levels: Array<IPriorityLevel>;
-
+  first: number;
+  levels: Array<IPriorityLevel>;
 }
 
-
 export interface IPriorityInternal {
-
-    first: number | null;
-    totalPriorityCycles: number | null;
-    priorityCycleIndex: number | null;
-    internalLevels: Array<number> | null;
-    levels: Array<IPriorityLevel> | null;
-
+  first: number | null;
+  totalPriorityCycles: number | null;
+  priorityCycleIndex: number | null;
+  internalLevels: Array<number> | null;
+  levels: Array<IPriorityLevel> | null;
 }
 
 export interface IGenericObservable {
-
-    isCallCompleted?: boolean;  //optional field
-    isPublish?: boolean;        //optional field
-
+  isCallCompleted?: boolean;  //optional field
+  isPublish?: boolean;        //optional field
 }
-
 
 export interface IBackpressureObj {
-
-    data: any;
-    cb: Function;
-
+  data: any;
+  cb: Function;
 }
 
-
 export interface IClientCount {
-
-    count: number;
-    index: number;
-    timeout: number;
-
+  count: number;
+  index: number;
+  timeout: number;
 }

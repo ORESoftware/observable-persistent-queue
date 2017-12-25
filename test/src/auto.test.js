@@ -5,11 +5,16 @@ const Test = suman.init(module, {
   pre: ['create-test-dir']
 });
 
-Test.create(function (assert, fs, path, userData, suite, Queue, Rx, before, it) {
+Test.create(function (b, assert, fs, path, userData, Queue, Rx, before, it) {
 
-  const id = suite.uniqueId;
+  const id = b.uniqueId;
   const pre = userData['suman.once.pre.js'];
-  const p = pre['create-test-dir'];
+  // const p = pre['create-test-dir'];
+
+  Rx = require('rxjs/Rx');
+  Queue = require('../../lib/queue').Queue;
+
+  const p = path.join(process.env.HOME, 'software_testing', 'opq');
 
   const q = new Queue({
     port: 7779,

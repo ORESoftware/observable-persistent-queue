@@ -21,9 +21,9 @@ module.exports = (b, before) => {
   // b.uniqueId = fs.statSync(b.filename).ino;
   b.uniqueId = uuid.v4();
 
-  before.cb(h => {
-    console.log('this is a before hook in suman.hooks.js.');
-    h.done();
-  });
+  // before.cb(h => {
+  //   console.log('this is a before hook in suman.hooks.js.');
+  //   h.done();
+  // });
 
 };
