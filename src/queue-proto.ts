@@ -14,8 +14,7 @@ import colors = require('chalk');
 
 //project
 import EE = require('events');
-import {Client} from 'live-mutex/client';
-import lmUtils = require('live-mutex/utils');
+import {Client,lmUtils} from 'live-mutex';
 import {log} from './logging';
 
 import {

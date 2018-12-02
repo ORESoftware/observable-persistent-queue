@@ -12,8 +12,8 @@ import {Subject, Observable, Subscriber} from 'rxjs/Rx';
 import _ = require('lodash');
 import uuidV4 = require('uuid/v4');
 import colors = require('chalk');
-import {Client} from 'live-mutex/client';
-import lmUtils = require('live-mutex/utils');
+import {Client,lmUtils} from 'live-mutex';
+
 
 //project
 import {log} from './logging';
@@ -182,7 +182,6 @@ export class Queue extends QProto {
       })
       .flatMap((obj: any) => {
         return releaseLock(this, obj.id);
-        
       })
       .do(() => {
         clientEE.emit('ready');
