@@ -3,7 +3,7 @@
 ##     OPQ  (Observable Persistent Queue)
 
 This project was born of the necessity to create a simple persistent message queue that 
-woud lbe usable by NPM libraries, so that no database would need to be installed; this is especially useful
+would be usable by NPM libraries, so that no database would need to be installed; this is especially useful
 during NPM postinstall routines. NPM install commands should not happen in parallel, so we need a queue of some variety.
 Not only that, the queue needs to be persistent and shared, such that if npm install commands happen in parallel and are 
 requested via multiple processes, that this information can be shared in one place.
@@ -31,7 +31,7 @@ queue.
  
 # Limitations 
 
-You cannot store unicode characters in the text file queue; also for the moment color characters ':' are not permitted,
+You cannot store unicode characters in the text file queue; also for the moment colon characters ':' are not permitted,
 although that restriction may be removed later.
 
 
